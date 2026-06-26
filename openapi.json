@@ -1,0 +1,871 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Holonet Objects API",
+    "description": "A single, generic record API for every CRM object — contacts, deals, companies, meetings, notes, and custom objects — all served through one contract.\n\n## Authentication\nAll requests require an OAuth2 bearer token. The organization is resolved from the token's `orgId` claim — no tenant header or subdomain needed.\n\n## Partial Updates (PATCH)\nOnly the fields you send get changed. Omitted fields stay untouched. To clear a field, send it with `null` (ADR-026).\n\n## Associations\nAssociations live in their own block — never inside `properties`. Embed up to 100 per type via `?associations=` query parameter. Use the dedicated Associations endpoints to page beyond that.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Dreamteam Support",
+      "email": "support@dreamteam.co"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dreamteamcrm.ai",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    { "name": "Records", "description": "CRUD, filter, and batch operations over any object type" },
+    { "name": "Associations", "description": "Record-to-record links" },
+    { "name": "Schema", "description": "Object type metadata and field definitions" },
+    { "name": "Users", "description": "User identity resource" },
+    { "name": "Pipelines", "description": "Deal pipeline management" }
+  ],
+  "paths": {
+    "/api/v1/objects/{object}/records": {
+      "get": {
+        "tags": ["Records"],
+        "operationId": "listRecords",
+        "summary": "List records",
+        "description": "Returns a page of records the caller is authorized to view. RBAC row-level scoped.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": { "type": "string", "example": "created_at,desc" },
+            "description": "Sort spec, e.g. `created_at,desc`"
+          },
+          { "$ref": "#/components/parameters/Associations" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/RecordPage" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "tags": ["Records"],
+        "operationId": "createRecord",
+        "summary": "Create a record",
+        "description": "Creates one record. Schema validation, dedup checks, and lifecycle hooks run in the write transaction.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecordCreateRequest" },
+              "example": {
+                "properties": {
+                  "first_name": "Jane",
+                  "last_name": "Okafor",
+                  "email": "jane@acme.com",
+                  "owner_id": 42
+                },
+                "associations": [
+                  { "id": 456, "kind": "company" }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Record created",
+            "headers": {
+              "Location": {
+                "description": "URI of the created record",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObjectRecord" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/{id}": {
+      "get": {
+        "tags": ["Records"],
+        "operationId": "getRecord",
+        "summary": "Get a record by ID",
+        "description": "Fetch one record. Use `?associations=contact&associations=company` to embed linked records (capped at 100 per type).",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" },
+          { "$ref": "#/components/parameters/Associations" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObjectRecord" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Records"],
+        "operationId": "replaceRecord",
+        "summary": "Replace a record (full update)",
+        "description": "Full replace. Fields the schema allows but the payload omits are cleared. For partial edits, use PATCH.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecordUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record replaced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObjectRecord" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Records"],
+        "operationId": "patchRecord",
+        "summary": "Partially update a record",
+        "description": "Only the fields you send get changed. Omitted fields stay untouched. To clear a field, send it with `null` (ADR-026).",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecordUpdateRequest" },
+              "example": {
+                "properties": {
+                  "stage_id": 7,
+                  "amount": 25000
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObjectRecord" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Records"],
+        "operationId": "deleteRecord",
+        "summary": "Delete a record",
+        "description": "Soft-delete. Lifecycle hooks may veto (e.g., a stage still referenced by deals). Returns 204.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted successfully" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/filter": {
+      "post": {
+        "tags": ["Records"],
+        "operationId": "filterRecords",
+        "summary": "Filter records",
+        "description": "Compound filtering. Filter groups are OR'd; filters within a group are AND'd. Supports lookup paths (`owner_id.email`) and association paths (`@contact_company.name`).",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FilterRequest" },
+              "example": {
+                "filter_groups": [
+                  {
+                    "logical_operator": "AND",
+                    "filters": [
+                      { "field_path": "status", "operator": "EQUALS", "value": "open" },
+                      { "field_path": "amount", "operator": "GREATER_THAN", "value": 10000 }
+                    ]
+                  }
+                ],
+                "sort": { "field": "created_at", "direction": "DESC" },
+                "pagination": { "page": 0, "page_size": 20 }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/RecordPage" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/batch": {
+      "post": {
+        "tags": ["Records"],
+        "operationId": "batchRecords",
+        "summary": "Batch operations",
+        "description": "Process up to 100 records in one call. Operations: create, read, update, upsert, delete. Set `all_or_none: true` for transactional mode.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchRequest" },
+              "example": {
+                "operation": "create",
+                "all_or_none": false,
+                "records": [
+                  { "properties": { "first_name": "Ana", "email": "ana@acme.com" } },
+                  { "properties": { "first_name": "Bo", "email": "bo@acme.com" } }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/{id}/associations/{target_type}": {
+      "get": {
+        "tags": ["Associations"],
+        "operationId": "listAssociations",
+        "summary": "List association links",
+        "description": "Page through a record's links of one associated object type.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" },
+          { "$ref": "#/components/parameters/TargetType" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": {
+          "200": { "description": "Association list" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/{id}/associations/{target_type}/{target_id}": {
+      "put": {
+        "tags": ["Associations"],
+        "operationId": "linkRecords",
+        "summary": "Link two records",
+        "description": "Idempotent. Ensures the link exists. Send `{\"type\": \"primary_contact\"}` to pin a labeled association.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" },
+          { "$ref": "#/components/parameters/TargetType" },
+          { "$ref": "#/components/parameters/TargetId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "description": "Label for the association", "example": "primary_contact" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Link created or already exists" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Associations"],
+        "operationId": "unlinkRecords",
+        "summary": "Unlink two records",
+        "description": "Idempotent. Removes the link if present. Use `?type=` to remove only a specific labeled association.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" },
+          { "$ref": "#/components/parameters/TargetType" },
+          { "$ref": "#/components/parameters/TargetId" },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Remove only associations with this label"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Link removed" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}/records/{id}/associations/{target_type}/batch": {
+      "post": {
+        "tags": ["Associations"],
+        "operationId": "bulkLinks",
+        "summary": "Bulk link/unlink",
+        "description": "Up to 1000 IDs per call. Transactional — any invalid target fails the whole batch.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" },
+          { "$ref": "#/components/parameters/RecordId" },
+          { "$ref": "#/components/parameters/TargetType" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "operation": { "type": "string", "enum": ["link", "unlink"] },
+                  "target_ids": {
+                    "type": "array",
+                    "items": { "type": "integer" },
+                    "maxItems": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Bulk operation result" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/objects/{object}": {
+      "get": {
+        "tags": ["Schema"],
+        "operationId": "describeObject",
+        "summary": "Describe an object type",
+        "description": "Returns the effective schema — field names, types, whether required, filterable, searchable.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ObjectType" }
+        ],
+        "responses": {
+          "200": { "description": "Schema description" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": ["Users"],
+        "operationId": "listUsers",
+        "summary": "List users",
+        "description": "Returns all users in the organization. Secret fields are never returned.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": {
+          "200": { "description": "User list" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "operationId": "createUser",
+        "summary": "Create (provision) a user",
+        "description": "Provision a new user in the organization.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "operationId": "getUser",
+        "summary": "Get a user",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "User found" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "operationId": "updateUser",
+        "summary": "Update a user",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "operationId": "deactivateUser",
+        "summary": "Deactivate a user",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "204": { "description": "User deactivated" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/v1/pipelines": {
+      "get": {
+        "tags": ["Pipelines"],
+        "operationId": "listPipelines",
+        "summary": "List pipelines",
+        "responses": {
+          "200": { "description": "Pipeline list" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Pipelines"],
+        "operationId": "createPipeline",
+        "summary": "Create a pipeline",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PipelineRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Pipeline created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/pipelines/{id}": {
+      "get": {
+        "tags": ["Pipelines"],
+        "operationId": "getPipeline",
+        "summary": "Get a pipeline",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Pipeline found" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Pipelines"],
+        "operationId": "replacePipeline",
+        "summary": "Replace a pipeline",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PipelineRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Pipeline replaced" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Pipelines"],
+        "operationId": "updatePipeline",
+        "summary": "Update a pipeline",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PipelineRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Pipeline updated" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Pipelines"],
+        "operationId": "deletePipeline",
+        "summary": "Delete a pipeline",
+        "description": "Deletion is vetoed while stages still reference the pipeline.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "204": { "description": "Pipeline deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth2 bearer token. Organization resolved from `orgId` claim."
+      }
+    },
+    "parameters": {
+      "ObjectType": {
+        "name": "object",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "example": "contact" },
+        "description": "Object type slug (e.g., contact, deal, company, note, meeting)"
+      },
+      "RecordId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "example": 123 },
+        "description": "Record ID"
+      },
+      "TargetType": {
+        "name": "target_type",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "example": "company" },
+        "description": "Associated object type"
+      },
+      "TargetId": {
+        "name": "target_id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" },
+        "description": "Target record ID"
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer", "default": 0, "minimum": 0 },
+        "description": "Zero-based page index"
+      },
+      "PageSize": {
+        "name": "page_size",
+        "in": "query",
+        "schema": { "type": "integer", "default": 20, "maximum": 200 },
+        "description": "Page size (max 200)"
+      },
+      "Associations": {
+        "name": "associations",
+        "in": "query",
+        "schema": { "type": "array", "items": { "type": "string" } },
+        "description": "Object types to embed (repeatable, capped at 100 per type)"
+      }
+    },
+    "schemas": {
+      "ObjectRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "type": { "type": "string" },
+          "properties": { "type": "object", "additionalProperties": true },
+          "associations": { "type": "object", "additionalProperties": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "created_by": { "type": "integer" }
+        }
+      },
+      "RecordCreateRequest": {
+        "type": "object",
+        "required": ["properties"],
+        "properties": {
+          "properties": { "type": "object", "additionalProperties": true, "description": "Field name → value pairs" },
+          "associations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "kind": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "RecordUpdateRequest": {
+        "type": "object",
+        "required": ["properties"],
+        "properties": {
+          "properties": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "FilterRequest": {
+        "type": "object",
+        "properties": {
+          "filter_groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "logical_operator": { "type": "string", "enum": ["AND", "OR"] },
+                "filters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field_path": { "type": "string" },
+                      "operator": { "type": "string", "enum": ["EQUALS", "NOT_EQUALS", "CONTAINS", "NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH", "GREATER_THAN", "LESS_THAN", "GREATER_THAN_OR_EQUALS", "LESS_THAN_OR_EQUALS", "IN", "NOT_IN", "IS_NULL", "IS_NOT_NULL", "BETWEEN", "NOT_BETWEEN"] },
+                      "value": {},
+                      "values": { "type": "array", "items": {} }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sort": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "direction": { "type": "string", "enum": ["ASC", "DESC"] }
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "page": { "type": "integer" },
+              "page_size": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "BatchRequest": {
+        "type": "object",
+        "required": ["operation", "records"],
+        "properties": {
+          "operation": { "type": "string", "enum": ["create", "read", "update", "upsert", "delete"] },
+          "all_or_none": { "type": "boolean", "default": false },
+          "id_property": { "type": "string", "description": "Property for upsert key (e.g., email)" },
+          "records": { "type": "array", "items": { "type": "object" }, "maxItems": 100 }
+        }
+      },
+      "BatchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "status": { "type": "string" },
+                "success": { "type": "boolean" },
+                "error": { "type": "string" }
+              }
+            }
+          },
+          "success_count": { "type": "integer" },
+          "failure_count": { "type": "integer" }
+        }
+      },
+      "UserCreateRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "primary_email": { "type": "string" },
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "role": { "type": "string" },
+          "title": { "type": "string" }
+        }
+      },
+      "UserUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "role": { "type": "string" },
+          "title": { "type": "string" }
+        }
+      },
+      "PipelineRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": { "type": "string" },
+                "field": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "PaginationMetadata": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "page_size": { "type": "integer" },
+          "total_elements": { "type": "integer" },
+          "total_pages": { "type": "integer" },
+          "has_next": { "type": "boolean" },
+          "has_previous": { "type": "boolean" }
+        }
+      }
+    },
+    "responses": {
+      "RecordPage": {
+        "description": "Paginated record list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "results": { "type": "array", "items": { "$ref": "#/components/schemas/ObjectRecord" } },
+                "metadata": { "$ref": "#/components/schemas/PaginationMetadata" }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Validation error, malformed body, or invalid filter",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing, invalid, or expired bearer token",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Authenticated but RBAC denies access",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Unknown object type or record ID",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Unique constraint violation or lifecycle hook veto",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  }
+}

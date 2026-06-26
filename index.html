@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dreamteam CRM - API Documentation</title>
+  <meta name="description" content="Dreamteam CRM API Reference - Records, Associations, Users, Pipelines">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --dt-primary: #4F46E5;
+      --dt-primary-dark: #3730A3;
+      --dt-bg: #ffffff;
+      --dt-text: #1e293b;
+      --dt-text-secondary: #64748b;
+      --dt-border: #e2e8f0;
+      --dt-code-bg: #f8fafc;
+      --dt-nav-bg: #f1f5f9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dt-text);
+      background: var(--dt-bg);
+    }
+
+    /* Top bar */
+    .topbar {
+      background: var(--dt-primary);
+      color: white;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+    .topbar-links a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 14px;
+      margin-left: 24px;
+      transition: color 0.15s;
+    }
+    .topbar-links a:hover { color: white; }
+    .topbar-links a.active {
+      color: white;
+      border-bottom: 2px solid white;
+      padding-bottom: 2px;
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 52px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--dt-nav-bg);
+      border-right: 1px solid var(--dt-border);
+      padding: 24px 0;
+      position: sticky;
+      top: 52px;
+      height: calc(100vh - 52px);
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 0 20px;
+      margin-bottom: 24px;
+    }
+    .sidebar-section h3 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--dt-text-secondary);
+      margin-bottom: 8px;
+    }
+    .sidebar-section a {
+      display: block;
+      font-size: 13px;
+      color: var(--dt-text);
+      text-decoration: none;
+      padding: 5px 8px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      transition: background 0.15s;
+    }
+    .sidebar-section a:hover { background: rgba(0,0,0,0.05); }
+    .sidebar-section a .method {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 6px;
+      font-family: monospace;
+    }
+    .method-get { background: #dbeafe; color: #1d4ed8; }
+    .method-post { background: #dcfce7; color: #15803d; }
+    .method-put { background: #fef3c7; color: #b45309; }
+    .method-patch { background: #fef3c7; color: #b45309; }
+    .method-delete { background: #fee2e2; color: #dc2626; }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 900px;
+    }
+
+    .main h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .main h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 12px;
+      padding-top: 24px;
+      border-top: 1px solid var(--dt-border);
+    }
+    .main p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--dt-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Endpoint block */
+    .endpoint {
+      background: var(--dt-code-bg);
+      border: 1px solid var(--dt-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .endpoint .method {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', monospace;
+    }
+    .endpoint .path { color: var(--dt-text); }
+
+    /* Collapsible */
+    details {
+      border: 1px solid var(--dt-border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    summary {
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--dt-code-bg);
+      user-select: none;
+      list-style: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+      content: '\25B6';
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+    details[open] summary::before { transform: rotate(90deg); }
+    details .content {
+      padding: 16px 20px;
+      border-top: 1px solid var(--dt-border);
+    }
+
+    /* Code blocks */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin-bottom: 12px;
+    }
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+    }
+    p code, li code {
+      background: var(--dt-code-bg);
+      border: 1px solid var(--dt-border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--dt-primary);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--dt-code-bg);
+      border-bottom: 2px solid var(--dt-border);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--dt-text-secondary);
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--dt-border);
+    }
+
+    /* Status badges */
+    .status {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .status-200 { background: #dcfce7; color: #15803d; }
+    .status-201 { background: #dcfce7; color: #15803d; }
+    .status-204 { background: #dcfce7; color: #15803d; }
+    .status-400 { background: #fef3c7; color: #b45309; }
+    .status-401 { background: #fee2e2; color: #dc2626; }
+    .status-403 { background: #fee2e2; color: #dc2626; }
+    .status-404 { background: #fef3c7; color: #b45309; }
+    .status-409 { background: #fef3c7; color: #b45309; }
+    .status-429 { background: #fee2e2; color: #dc2626; }
+
+    /* Utility */
+    .muted { color: var(--dt-text-secondary); }
+    .mt-4 { margin-top: 32px; }
+    .mb-2 { margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 14px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Dreamteam CRM API</h1>
+  <div class="topbar-links">
+    <a href="index.html" class="active">Reference</a>
+    <a href="try-it.html">Try It</a>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <h3>Getting Started</h3>
+      <a href="#introduction">Introduction</a>
+      <a href="#authentication">Authentication</a>
+      <a href="#pagination">Pagination</a>
+      <a href="#errors">Errors</a>
+    </div>
+    <div class="sidebar-section">
+      <h3>Records</h3>
+      <a href="#list-records"><span class="method method-get">GET</span>List records</a>
+      <a href="#create-record"><span class="method method-post">POST</span>Create record</a>
+      <a href="#get-record"><span class="method method-get">GET</span>Get record</a>
+      <a href="#replace-record"><span class="method method-put">PUT</span>Replace record</a>
+      <a href="#patch-record"><span class="method method-patch">PATCH</span>Update record</a>
+      <a href="#delete-record"><span class="method method-delete">DEL</span>Delete record</a>
+      <a href="#filter-records"><span class="method method-post">POST</span>Filter records</a>
+      <a href="#batch-records"><span class="method method-post">POST</span>Batch operations</a>
+    </div>
+    <div class="sidebar-section">
+      <h3>Associations</h3>
+      <a href="#list-links"><span class="method method-get">GET</span>List links</a>
+      <a href="#link-records"><span class="method method-put">PUT</span>Link records</a>
+      <a href="#unlink-records"><span class="method method-delete">DEL</span>Unlink records</a>
+      <a href="#bulk-links"><span class="method method-post">POST</span>Bulk link/unlink</a>
+    </div>
+    <div class="sidebar-section">
+      <h3>Schema</h3>
+      <a href="#describe-object"><span class="method method-get">GET</span>Describe type</a>
+    </div>
+    <div class="sidebar-section">
+      <h3>Users</h3>
+      <a href="#list-users"><span class="method method-get">GET</span>List users</a>
+      <a href="#create-user"><span class="method method-post">POST</span>Create user</a>
+      <a href="#get-user"><span class="method method-get">GET</span>Get user</a>
+      <a href="#update-user"><span class="method method-patch">PATCH</span>Update user</a>
+      <a href="#deactivate-user"><span class="method method-delete">DEL</span>Deactivate user</a>
+    </div>
+    <div class="sidebar-section">
+      <h3>Pipelines</h3>
+      <a href="#list-pipelines"><span class="method method-get">GET</span>List pipelines</a>
+      <a href="#create-pipeline"><span class="method method-post">POST</span>Create pipeline</a>
+      <a href="#get-pipeline"><span class="method method-get">GET</span>Get pipeline</a>
+      <a href="#replace-pipeline"><span class="method method-put">PUT</span>Replace pipeline</a>
+      <a href="#update-pipeline"><span class="method method-patch">PATCH</span>Update pipeline</a>
+      <a href="#delete-pipeline"><span class="method method-delete">DEL</span>Delete pipeline</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <h2 id="introduction">Dreamteam CRM API</h2>
+    <p>A single, generic record API for every CRM object - contacts, deals, companies, meetings, notes, and custom objects - all served through one contract.</p>
+
+    <h3 id="authentication">Authentication</h3>
+    <p>All requests require an OAuth2 bearer token. The organization is resolved from the token's <code>orgId</code> claim - no tenant header or subdomain needed.</p>
+    <div class="endpoint">
+      <span class="path">Authorization: Bearer &lt;YOUR_TOKEN&gt;</span>
+    </div>
+    <p>How to get your token:</p>
+    <p class="muted"><em>Section in progress - details will be added once the token generation flow is available in the product.</em></p>
+
+    <h3 id="pagination">Pagination</h3>
+    <p>All list endpoints return paginated results using <code>page</code> (zero-based) and <code>page_size</code> (max 200, default 20).</p>
+    <details>
+      <summary>Response metadata shape</summary>
+      <div class="content">
+<pre>{
+  "results": [ ... ],
+  "metadata": {
+    "page": 0,
+    "page_size": 20,
+    "total_elements": 137,
+    "total_pages": 7,
+    "has_next": true,
+    "has_previous": false
+  }
+}</pre>
+      </div>
+    </details>
+
+    <h3 id="errors">Error Responses</h3>
+    <table>
+      <tr><th>Status</th><th>Meaning</th><th>Description</th></tr>
+      <tr><td><span class="status status-200">200</span></td><td>Success</td><td>Request successful</td></tr>
+      <tr><td><span class="status status-201">201</span></td><td>Created</td><td>Record created. <code>Location</code> header has the URI</td></tr>
+      <tr><td><span class="status status-204">204</span></td><td>No Content</td><td>Deleted successfully. No response body</td></tr>
+      <tr><td><span class="status status-400">400</span></td><td>Bad Request</td><td>Validation error, malformed body, or invalid filter</td></tr>
+      <tr><td><span class="status status-401">401</span></td><td>Unauthorized</td><td>Missing, invalid, or expired bearer token</td></tr>
+      <tr><td><span class="status status-403">403</span></td><td>Forbidden</td><td>Authenticated but RBAC denies access to this object/record/field</td></tr>
+      <tr><td><span class="status status-404">404</span></td><td>Not Found</td><td>Unknown object type or record ID</td></tr>
+      <tr><td><span class="status status-409">409</span></td><td>Conflict</td><td>Unique constraint violation or lifecycle hook veto</td></tr>
+      <tr><td><span class="status status-429">429</span></td><td>Rate Limited</td><td>Per-tenant rate limit exceeded. Check <code>Retry-After</code> header</td></tr>
+    </table>
+    <details>
+      <summary>Error response shape</summary>
+      <div class="content">
+<pre>{
+  "code": "VALIDATION_FAILED",
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "code": "REQUIRED_FIELD_MISSING",
+      "field": "email",
+      "message": "Email is required"
+    }
+  ]
+}</pre>
+      </div>
+    </details>
+
+    <!-- RECORDS -->
+    <h2 class="mt-4">Records</h2>
+    <p>CRUD, filter, and batch operations over any object type. Replace <code>{object}</code> with the type slug (e.g., <code>contact</code>, <code>deal</code>, <code>company</code>).</p>
+
+    <h3 id="list-records">List Records</h3>
+    <div class="endpoint">
+      <span class="method method-get">GET</span>
+      <span class="path">/api/v1/objects/{object}/records</span>
+    </div>
+    <p>Returns a page of records the caller is authorized to view. RBAC row-level scoped.</p>
+    <table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+      <tr><td><code>page</code></td><td>integer</td><td>0</td><td>Zero-based page index</td></tr>
+      <tr><td><code>page_size</code></td><td>integer</td><td>20</td><td>Page size (max 200)</td></tr>
+      <tr><td><code>sort</code></td><td>string</td><td>-</td><td>Sort spec, e.g. <code>created_at,desc</code></td></tr>
+      <tr><td><code>associations</code></td><td>string[]</td><td>-</td><td>Object types to embed (repeatable)</td></tr>
+    </table>
+    <details>
+      <summary>curl example</summary>
+      <div class="content">
+<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records?page=0&page_size=20&sort=created_at,desc' \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Bearer &lt;TOKEN&gt;'</pre>
+      </div>
+    </details>
+
+    <h3 id="create-record">Create a Record</h3>
+    <div class="endpoint">
+      <span class="method method-post">POST</span>
+      <span class="path">/api/v1/objects/{object}/records</span>
+    </div>
+    <p>Creates one record. Schema validation, dedup checks, and lifecycle hooks run in the write transaction.</p>
+    <details>
+      <summary>curl example</summary>
+      <div class="content">
+<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records' \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer &lt;TOKEN&gt;' \
+  --data '{
+    "properties": {
+      "first_name": "Jane",
+      "last_name": "Okafor",
+      "email": "jane@acme.com",
+      "owner_id": 42
+    },
+    "associations": [
+      { "id": 456, "kind": "company" }
+    ]
+  }'</pre>
+      </div>
+    </details>
+
+    <h3 id="get-record">Get a Record by ID</h3>
+    <div class="endpoint">
+      <span class="method method-get">GET</span>
+      <span class="path">/api/v1/objects/{object}/records/{id}</span>
+    </div>
+    <p>Fetch one record. Use <code>?associations=contact&associations=company</code> to embed linked records (capped at 100 per type).</p>
+    <details>
+      <summary>curl example</summary>
+      <div class="content">
+<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records/123' \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Bearer &lt;TOKEN&gt;'</pre>
+      </div>
+    </details>
+    <details>
+      <summary>Sample response</summary>
+      <div class="content">
+<pre>{
+  "id": 123,
+  "type": "contact",
+  "properties": {
+    "first_name": "Jane",
+    "last_name": "Okafor",
+    "email": "jane@acme.com",
+    "owner_id": 42
+  },
+  "associations": {},
+  "created_at": "2026-06-25T12:00:00Z",
+  "updated_at": "2026-06-25T12:05:00Z",
+  "created_by": 7
+}</pre>
+      </div>
+    </details>
+
+    <h3 id="replace-record">Replace a Record</h3>
+    <div class="endpoint">
+      <span class="method method-put">PUT</span>
+      <span class="path">/api/v1/objects/{object}/records/{id}</span>
+    </div>
+    <p>Full replace. Fields the schema allows but the payload omits are cleared. For partial edits, use PATCH.</p>
+
+    <h3 id="patch-record">Partially Update a Record</h3>
+    <div class="endpoint">
+      <span class="method method-patch">PATCH</span>
+      <span class="path">/api/v1/objects/{object}/records/{id}</span>
+    </div>
+    <p>Only the fields you send get changed. Omitted fields stay untouched. To clear a field, send it with <code>null</code>.</p>
+
+    <h3 id="delete-record">Delete a Record</h3>
+    <div class="endpoint">
+      <span class="method method-delete">DELETE</span>
+      <span class="path">/api/v1/objects/{object}/records/{id}</span>
+    </div>
+    <p>Soft-delete. Lifecycle hooks may veto (e.g., a stage still referenced by deals). Returns <code>204</code>.</p>
+
+    <h3 id="filter-records">Filter Records</h3>
+    <div class="endpoint">
+      <span class="method method-post">POST</span>
+      <span class="path">/api/v1/objects/{object}/records/filter</span>
+    </div>
+    <p>Compound filtering. Filter groups are OR'd; filters within a group are AND'd (configurable). Supports lookup paths (<code>owner_id.email</code>) and association paths (<code>@contact_company.name</code>).</p>
+    <details>
+      <summary>Filter operators</summary>
+      <div class="content">
+        <table>
+          <tr><th>Operator</th><th>Value field</th><th>Description</th></tr>
+          <tr><td><code>EQUALS</code></td><td><code>value</code></td><td>Exact match</td></tr>
+          <tr><td><code>NOT_EQUALS</code></td><td><code>value</code></td><td>Not equal</td></tr>
+          <tr><td><code>CONTAINS</code></td><td><code>value</code></td><td>Substring match</td></tr>
+          <tr><td><code>NOT_CONTAINS</code></td><td><code>value</code></td><td>Does not contain</td></tr>
+          <tr><td><code>STARTS_WITH</code></td><td><code>value</code></td><td>Prefix match</td></tr>
+          <tr><td><code>ENDS_WITH</code></td><td><code>value</code></td><td>Suffix match</td></tr>
+          <tr><td><code>GREATER_THAN</code></td><td><code>value</code></td><td>Greater than</td></tr>
+          <tr><td><code>LESS_THAN</code></td><td><code>value</code></td><td>Less than</td></tr>
+          <tr><td><code>GREATER_THAN_OR_EQUALS</code></td><td><code>value</code></td><td>Greater than or equal</td></tr>
+          <tr><td><code>LESS_THAN_OR_EQUALS</code></td><td><code>value</code></td><td>Less than or equal</td></tr>
+          <tr><td><code>IN</code></td><td><code>values</code></td><td>Value in list</td></tr>
+          <tr><td><code>NOT_IN</code></td><td><code>values</code></td><td>Value not in list</td></tr>
+          <tr><td><code>IS_NULL</code></td><td>none</td><td>Field is empty</td></tr>
+          <tr><td><code>IS_NOT_NULL</code></td><td>none</td><td>Field is not empty</td></tr>
+          <tr><td><code>BETWEEN</code></td><td><code>values</code> (2)</td><td>Range match (inclusive)</td></tr>
+          <tr><td><code>NOT_BETWEEN</code></td><td><code>values</code> (2)</td><td>Outside range</td></tr>
+        </table>
+      </div>
+    </details>
+    <details>
+      <summary>curl example - open deals over 10k</summary>
+      <div class="content">
+<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/deal/records/filter' \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer &lt;TOKEN&gt;' \
+  --data '{
+    "filter_groups": [
+      {
+        "logical_operator": "AND",
+        "filters": [
+          { "field_path": "status", "operator": "EQUALS", "value": "open" },
+          { "field_path": "amount", "operator": "GREATER_THAN", "value": 10000 },
+          { "field_path": "owner_id", "operator": "EQUALS", "value": 100 }
+        ]
+      }
+    ],
+    "sort": { "field": "created_at", "direction": "DESC" },
+    "pagination": { "page": 0, "page_size": 20 }
+  }'</pre>
+      </div>
+    </details>
+
+    <h3 id="batch-records">Batch Operations</h3>
+    <div class="endpoint">
+      <span class="method method-post">POST</span>
+      <span class="path">/api/v1/objects/{object}/records/batch</span>
+    </div>
+    <p>Process up to 100 records in one call. Operations: <code>create</code>, <code>read</code>, <code>update</code>, <code>upsert</code>, <code>delete</code>. Set <code>all_or_none: true</code> for transactional mode.</p>
+
+    <!-- ASSOCIATIONS -->
+    <h2 class="mt-4">Associations</h2>
+    <p>Record-to-record links. The embed cap on record responses is 100 per type - use these endpoints to page beyond that or manage links directly.</p>
+
+    <h3 id="list-links">List Association Links</h3>
+    <div class="endpoint">
+      <span class="method method-get">GET</span>
+      <span class="path">/api/v1/objects/{object}/records/{id}/associations/{target_type}</span>
+    </div>
+    <p>Page through a record's links of one associated object type. Returns <code>{id, type}</code> entries only (no record data).</p>
+
+    <h3 id="link-records">Link Two Records</h3>
+    <div class="endpoint">
+      <span class="method method-put">PUT</span>
+      <span class="path">.../{id}/associations/{target_type}/{target_id}</span>
+    </div>
+    <p>Idempotent. Ensures the link exists. Send <code>{"type": "primary_contact"}</code> to pin a labeled association.</p>
+
+    <h3 id="unlink-records">Unlink Two Records</h3>
+    <div class="endpoint">
+      <span class="method method-delete">DELETE</span>
+      <span class="path">.../{id}/associations/{target_type}/{target_id}</span>
+    </div>
+    <p>Idempotent. Removes the link if present. Use <code>?type=</code> to remove only a specific labeled association.</p>
+
+    <h3 id="bulk-links">Bulk Link/Unlink</h3>
+    <div class="endpoint">
+      <span class="method method-post">POST</span>
+      <span class="path">.../{id}/associations/{target_type}/batch</span>
+    </div>
+    <p>Up to 1000 IDs per call. Transactional - any invalid target fails the whole batch.</p>
+
+    <!-- SCHEMA -->
+    <h2 class="mt-4">Schema</h2>
+
+    <h3 id="describe-object">Describe an Object Type</h3>
+    <div class="endpoint">
+      <span class="method method-get">GET</span>
+      <span class="path">/api/v1/objects/{object}</span>
+    </div>
+    <p>Returns the effective schema - field names, types, whether required, filterable, searchable. Use before creating or updating records.</p>
+
+    <!-- USERS -->
+    <h2 class="mt-4">Users</h2>
+    <p>First-class identity resource. Secret fields (tokens, OTP, lockout) are never returned.</p>
+
+    <h3 id="list-users">List Users</h3>
+    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/users</span></div>
+
+    <h3 id="create-user">Create (Provision) a User</h3>
+    <div class="endpoint"><span class="method method-post">POST</span><span class="path">/api/v1/users</span></div>
+
+    <h3 id="get-user">Get a User</h3>
+    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/users/{id}</span></div>
+
+    <h3 id="update-user">Update a User</h3>
+    <div class="endpoint"><span class="method method-patch">PATCH</span><span class="path">/api/v1/users/{id}</span></div>
+
+    <h3 id="deactivate-user">Deactivate a User</h3>
+    <div class="endpoint"><span class="method method-delete">DELETE</span><span class="path">/api/v1/users/{id}</span></div>
+
+    <!-- PIPELINES -->
+    <h2 class="mt-4">Pipelines</h2>
+    <p>First-class pipeline resource. Owns stage records. Deletion is vetoed while stages still reference the pipeline.</p>
+
+    <h3 id="list-pipelines">List Pipelines</h3>
+    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/pipelines</span></div>
+
+    <h3 id="create-pipeline">Create a Pipeline</h3>
+    <div class="endpoint"><span class="method method-post">POST</span><span class="path">/api/v1/pipelines</span></div>
+
+    <h3 id="get-pipeline">Get a Pipeline</h3>
+    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/pipelines/{id}</span></div>
+
+    <h3 id="replace-pipeline">Replace a Pipeline</h3>
+    <div class="endpoint"><span class="method method-put">PUT</span><span class="path">/api/v1/pipelines/{id}</span></div>
+
+    <h3 id="update-pipeline">Update a Pipeline</h3>
+    <div class="endpoint"><span class="method method-patch">PATCH</span><span class="path">/api/v1/pipelines/{id}</span></div>
+
+    <h3 id="delete-pipeline">Delete a Pipeline</h3>
+    <div class="endpoint"><span class="method method-delete">DELETE</span><span class="path">/api/v1/pipelines/{id}</span></div>
+
+    <p class="mt-4 muted" style="font-size:13px;">Last updated: June 2026</p>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dreamteam CRM API - Try It</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .topbar-custom {
+      background: #4F46E5;
+      color: white;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-custom h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; margin: 0; }
+    .topbar-custom a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 14px;
+      margin-left: 24px;
+      transition: color 0.15s;
+    }
+    .topbar-custom a:hover { color: white; }
+    .topbar-custom a.active {
+      color: white;
+      border-bottom: 2px solid white;
+      padding-bottom: 2px;
+    }
+    /* Override Swagger UI's own topbar */
+    .swagger-ui .topbar { display: none; }
+    /* Tighten up spacing */
+    .swagger-ui .info { margin: 20px 0; }
+    /* Brand the authorize button */
+    .swagger-ui .btn.authorize { border-color: #4F46E5; color: #4F46E5; }
+    .swagger-ui .btn.authorize svg { fill: #4F46E5; }
+  </style>
+</head>
+<body>
+  <div class="topbar-custom">
+    <h1>Dreamteam CRM API</h1>
+    <div>
+      <a href="index.html">Reference</a>
+      <a href="try-it.html" class="active">Try It</a>
+    </div>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "openapi.json",
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIStandalonePreset
+      ],
+      plugins: [
+        SwaggerUIBundle.plugins.DownloadUrl
+      ],
+      layout: "StandaloneLayout",
+      tryItOutEnabled: true,
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 2,
+      docExpansion: "list",
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true
+    });
+  </script>
+</body>
+</html>
