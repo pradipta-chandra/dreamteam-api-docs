@@ -4,72 +4,580 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dreamteam CRM API - Try It</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    .topbar-custom {
-      background: #4F46E5;
+    :root {
+      --dt-primary: #4F46E5;
+      --dt-primary-hover: #4338CA;
+      --dt-bg: #ffffff;
+      --dt-text: #1e293b;
+      --dt-text-secondary: #64748b;
+      --dt-border: #e2e8f0;
+      --dt-code-bg: #f8fafc;
+      --dt-success: #16a34a;
+      --dt-error: #dc2626;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dt-text);
+      background: #f8fafc;
+    }
+
+    .topbar {
+      background: var(--dt-primary);
       color: white;
       padding: 14px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .topbar-custom h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; margin: 0; }
-    .topbar-custom a {
+    .topbar h1 { font-size: 18px; font-weight: 600; }
+    .topbar-links a {
       color: rgba(255,255,255,0.85);
       text-decoration: none;
       font-size: 14px;
       margin-left: 24px;
-      transition: color 0.15s;
     }
-    .topbar-custom a:hover { color: white; }
-    .topbar-custom a.active {
+    .topbar-links a:hover { color: white; }
+    .topbar-links a.active {
       color: white;
       border-bottom: 2px solid white;
       padding-bottom: 2px;
     }
-    /* Override Swagger UI's own topbar */
-    .swagger-ui .topbar { display: none; }
-    /* Tighten up spacing */
-    .swagger-ui .info { margin: 20px 0; }
-    /* Brand the authorize button */
-    .swagger-ui .btn.authorize { border-color: #4F46E5; color: #4F46E5; }
-    .swagger-ui .btn.authorize svg { fill: #4F46E5; }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--dt-border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card p.subtitle {
+      font-size: 13px;
+      color: var(--dt-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--dt-text);
+    }
+
+    input[type="text"], input[type="number"], input[type="password"], select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--dt-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: var(--dt-text);
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--dt-primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    textarea {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .form-row { margin-bottom: 16px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .token-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .token-row .token-field { flex: 1; }
+    .token-status { font-size: 12px; margin-top: 6px; }
+    .token-status.set { color: var(--dt-success); }
+    .token-status.unset { color: var(--dt-text-secondary); }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--dt-primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--dt-primary-hover); }
+    .btn-primary:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: white;
+      color: var(--dt-text);
+      border: 1px solid var(--dt-border);
+    }
+    .btn-secondary:hover { background: var(--dt-code-bg); }
+
+    .method-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+    .method-GET { background: #dbeafe; color: #1d4ed8; }
+    .method-POST { background: #dcfce7; color: #15803d; }
+    .method-PUT { background: #fef3c7; color: #b45309; }
+    .method-PATCH { background: #fef3c7; color: #b45309; }
+    .method-DELETE { background: #fee2e2; color: #dc2626; }
+
+    .endpoint-display {
+      background: var(--dt-code-bg);
+      border: 1px solid var(--dt-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .endpoint-path { color: var(--dt-text); word-break: break-all; }
+
+    .response-area {
+      margin-top: 20px;
+      display: none;
+    }
+    .response-area.visible { display: block; }
+    .response-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .response-header h3 { font-size: 14px; font-weight: 600; }
+    .status-badge {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'SF Mono', monospace;
+    }
+    .status-2xx { background: #dcfce7; color: #15803d; }
+    .status-4xx { background: #fef3c7; color: #b45309; }
+    .status-5xx { background: #fee2e2; color: #dc2626; }
+    .status-err { background: #fee2e2; color: #dc2626; }
+
+    .response-body {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .response-time {
+      font-size: 12px;
+      color: var(--dt-text-secondary);
+      margin-top: 8px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .help-text {
+      font-size: 12px;
+      color: var(--dt-text-secondary);
+      margin-top: 4px;
+    }
+    .divider {
+      height: 1px;
+      background: var(--dt-border);
+      margin: 20px 0;
+    }
+    .hidden { display: none; }
+
+    .params-section { margin-top: 16px; }
+    .params-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dt-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
-  <div class="topbar-custom">
-    <h1>Dreamteam CRM API</h1>
-    <div>
-      <a href="index.html">Reference</a>
-      <a href="try-it.html" class="active">Try It</a>
+
+<div class="topbar">
+  <h1>Dreamteam CRM API</h1>
+  <div class="topbar-links">
+    <a href="index.html">Reference</a>
+    <a href="try-it.html" class="active">Try It</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Step 1: Token -->
+  <div class="card">
+    <h2>1. Enter your Bearer Token</h2>
+    <p class="subtitle">Paste your token to authenticate API calls. It stays in your browser only.</p>
+    <div class="token-row">
+      <div class="token-field">
+        <input type="password" id="token" placeholder="eyJhbGciOiJIUzI1NiJ9...">
+      </div>
+      <button class="btn btn-secondary" onclick="toggleToken()" id="toggleBtn">Show</button>
+    </div>
+    <div class="token-status unset" id="tokenStatus">No token set</div>
+  </div>
+
+  <!-- Step 2: Pick endpoint -->
+  <div class="card">
+    <h2>2. Choose an endpoint</h2>
+    <p class="subtitle">Pick what you want to do, fill in the details, and hit Send.</p>
+
+    <div class="form-row">
+      <select id="endpoint" onchange="onEndpointChange()">
+        <optgroup label="Records">
+          <option value="list-records">GET &mdash; List records</option>
+          <option value="create-record">POST &mdash; Create a record</option>
+          <option value="get-record">GET &mdash; Get a record by ID</option>
+          <option value="update-record">PATCH &mdash; Update a record</option>
+          <option value="replace-record">PUT &mdash; Replace a record</option>
+          <option value="delete-record">DELETE &mdash; Delete a record</option>
+          <option value="filter-records">POST &mdash; Filter records</option>
+          <option value="batch-records">POST &mdash; Batch operations</option>
+        </optgroup>
+        <optgroup label="Associations">
+          <option value="list-associations">GET &mdash; List association links</option>
+          <option value="link-records">PUT &mdash; Link two records</option>
+          <option value="unlink-records">DELETE &mdash; Unlink two records</option>
+        </optgroup>
+        <optgroup label="Schema">
+          <option value="describe-object">GET &mdash; Describe object type</option>
+        </optgroup>
+        <optgroup label="Users">
+          <option value="list-users">GET &mdash; List users</option>
+          <option value="get-user">GET &mdash; Get a user</option>
+        </optgroup>
+        <optgroup label="Pipelines">
+          <option value="list-pipelines">GET &mdash; List pipelines</option>
+          <option value="get-pipeline">GET &mdash; Get a pipeline</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="endpoint-display">
+      <span class="method-badge method-GET" id="methodBadge">GET</span>
+      <span class="endpoint-path" id="endpointPath">/api/v1/objects/{object}/records</span>
+    </div>
+
+    <div id="paramsArea"></div>
+
+    <div id="bodyArea" class="hidden">
+      <div class="divider"></div>
+      <div class="params-section">
+        <h3>Request Body</h3>
+        <textarea id="requestBody" placeholder='{ "properties": { "first_name": "Jane" } }'></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn btn-primary" id="sendBtn" onclick="sendRequest()">
+      Send Request
+    </button>
+
+    <div class="response-area" id="responseArea">
+      <div class="divider"></div>
+      <div class="response-header">
+        <h3>Response</h3>
+        <span class="status-badge" id="statusBadge"></span>
+      </div>
+      <div class="response-body" id="responseBody"></div>
+      <div class="response-time" id="responseTime"></div>
     </div>
   </div>
-  <div id="swagger-ui"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
-  <script>
-    SwaggerUIBundle({
-      url: "openapi.json",
-      dom_id: '#swagger-ui',
-      deepLinking: true,
-      presets: [
-        SwaggerUIBundle.presets.apis,
-        SwaggerUIStandalonePreset
+
+</div>
+
+<script>
+  const BASE = 'https://api.dreamteamcrm.ai';
+
+  const ENDPOINTS = {
+    'list-records': {
+      method: 'GET', path: '/api/v1/objects/{object}/records',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'page', label: 'Page', type: 'number', placeholder: '0', in: 'query', default: '0' },
+        { name: 'page_size', label: 'Page size', type: 'number', placeholder: '20', in: 'query', default: '20' },
+        { name: 'sort', label: 'Sort', type: 'text', placeholder: 'created_at,desc', in: 'query' }
+      ]
+    },
+    'create-record': {
+      method: 'POST', path: '/api/v1/objects/{object}/records',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' }
       ],
-      plugins: [
-        SwaggerUIBundle.plugins.DownloadUrl
+      body: '{\n  "properties": {\n    "first_name": "Jane",\n    "last_name": "Okafor",\n    "email": "jane@acme.com"\n  }\n}'
+    },
+    'get-record': {
+      method: 'GET', path: '/api/v1/objects/{object}/records/{id}',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Record ID', type: 'number', placeholder: '123', in: 'path' }
+      ]
+    },
+    'update-record': {
+      method: 'PATCH', path: '/api/v1/objects/{object}/records/{id}',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Record ID', type: 'number', placeholder: '123', in: 'path' }
       ],
-      layout: "StandaloneLayout",
-      tryItOutEnabled: true,
-      defaultModelsExpandDepth: 1,
-      defaultModelExpandDepth: 2,
-      docExpansion: "list",
-      filter: true,
-      showExtensions: true,
-      showCommonExtensions: true
+      body: '{\n  "properties": {\n    "job_title": "VP Engineering"\n  }\n}'
+    },
+    'replace-record': {
+      method: 'PUT', path: '/api/v1/objects/{object}/records/{id}',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Record ID', type: 'number', placeholder: '123', in: 'path' }
+      ],
+      body: '{\n  "properties": {\n    "first_name": "Jane",\n    "last_name": "Okafor",\n    "email": "jane@acme.com",\n    "job_title": "SVP Engineering"\n  }\n}'
+    },
+    'delete-record': {
+      method: 'DELETE', path: '/api/v1/objects/{object}/records/{id}',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Record ID', type: 'number', placeholder: '123', in: 'path' }
+      ]
+    },
+    'filter-records': {
+      method: 'POST', path: '/api/v1/objects/{object}/records/filter',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' }
+      ],
+      body: '{\n  "filter_groups": [\n    {\n      "logical_operator": "AND",\n      "filters": [\n        { "field_path": "email", "operator": "CONTAINS", "value": "acme.com" }\n      ]\n    }\n  ],\n  "sort": { "field": "created_at", "direction": "DESC" },\n  "pagination": { "page": 0, "page_size": 20 }\n}'
+    },
+    'batch-records': {
+      method: 'POST', path: '/api/v1/objects/{object}/records/batch',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' }
+      ],
+      body: '{\n  "operation": "create",\n  "all_or_none": false,\n  "records": [\n    { "properties": { "first_name": "Ana", "email": "ana@acme.com" } },\n    { "properties": { "first_name": "Bo", "email": "bo@acme.com" } }\n  ]\n}'
+    },
+    'list-associations': {
+      method: 'GET', path: '/api/v1/objects/{object}/records/{id}/associations/{target_type}',
+      params: [
+        { name: 'object', label: 'Source type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Source record ID', type: 'number', placeholder: '123', in: 'path' },
+        { name: 'target_type', label: 'Target type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' }
+      ]
+    },
+    'link-records': {
+      method: 'PUT', path: '/api/v1/objects/{object}/records/{id}/associations/{target_type}/{target_id}',
+      params: [
+        { name: 'object', label: 'Source type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Source record ID', type: 'number', placeholder: '123', in: 'path' },
+        { name: 'target_type', label: 'Target type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'target_id', label: 'Target record ID', type: 'number', placeholder: '456', in: 'path' }
+      ]
+    },
+    'unlink-records': {
+      method: 'DELETE', path: '/api/v1/objects/{object}/records/{id}/associations/{target_type}/{target_id}',
+      params: [
+        { name: 'object', label: 'Source type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'id', label: 'Source record ID', type: 'number', placeholder: '123', in: 'path' },
+        { name: 'target_type', label: 'Target type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' },
+        { name: 'target_id', label: 'Target record ID', type: 'number', placeholder: '456', in: 'path' }
+      ]
+    },
+    'describe-object': {
+      method: 'GET', path: '/api/v1/objects/{object}',
+      params: [
+        { name: 'object', label: 'Object type', type: 'select', options: ['contact','company','deal','note','meeting'], in: 'path' }
+      ]
+    },
+    'list-users': { method: 'GET', path: '/api/v1/users', params: [] },
+    'get-user': {
+      method: 'GET', path: '/api/v1/users/{id}',
+      params: [ { name: 'id', label: 'User ID', type: 'number', placeholder: '42', in: 'path' } ]
+    },
+    'list-pipelines': { method: 'GET', path: '/api/v1/pipelines', params: [] },
+    'get-pipeline': {
+      method: 'GET', path: '/api/v1/pipelines/{id}',
+      params: [ { name: 'id', label: 'Pipeline ID', type: 'number', placeholder: '1', in: 'path' } ]
+    }
+  };
+
+  function toggleToken() {
+    const input = document.getElementById('token');
+    const btn = document.getElementById('toggleBtn');
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
+  }
+
+  document.getElementById('token').addEventListener('input', function() {
+    const status = document.getElementById('tokenStatus');
+    if (this.value.trim()) { status.textContent = 'Token set'; status.className = 'token-status set'; }
+    else { status.textContent = 'No token set'; status.className = 'token-status unset'; }
+  });
+
+  function onEndpointChange() {
+    const key = document.getElementById('endpoint').value;
+    const ep = ENDPOINTS[key];
+
+    const badge = document.getElementById('methodBadge');
+    badge.textContent = ep.method;
+    badge.className = 'method-badge method-' + ep.method;
+    document.getElementById('endpointPath').textContent = ep.path;
+
+    const paramsArea = document.getElementById('paramsArea');
+    if (ep.params.length === 0) {
+      paramsArea.innerHTML = '<p class="help-text" style="margin-top:8px">No parameters needed.</p>';
+    } else {
+      let html = '<div class="params-section"><h3>Parameters</h3><div class="form-grid">';
+      ep.params.forEach(p => {
+        html += '<div class="form-row">';
+        html += '<label for="param-' + p.name + '">' + p.label + '</label>';
+        if (p.type === 'select') {
+          html += '<select id="param-' + p.name + '">';
+          p.options.forEach(o => { html += '<option value="' + o + '">' + o + '</option>'; });
+          html += '</select>';
+        } else {
+          html += '<input type="' + p.type + '" id="param-' + p.name + '" placeholder="' + (p.placeholder || '') + '" value="' + (p.default || '') + '">';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+      paramsArea.innerHTML = html;
+    }
+
+    const bodyArea = document.getElementById('bodyArea');
+    if (ep.body) {
+      bodyArea.classList.remove('hidden');
+      document.getElementById('requestBody').value = ep.body;
+    } else {
+      bodyArea.classList.add('hidden');
+      document.getElementById('requestBody').value = '';
+    }
+
+    document.getElementById('responseArea').classList.remove('visible');
+  }
+
+  async function sendRequest() {
+    const token = document.getElementById('token').value.trim();
+    if (!token) { alert('Please enter your Bearer token first (Step 1).'); return; }
+
+    const key = document.getElementById('endpoint').value;
+    const ep = ENDPOINTS[key];
+    const btn = document.getElementById('sendBtn');
+
+    let path = ep.path;
+    let queryParams = [];
+
+    ep.params.forEach(p => {
+      const val = document.getElementById('param-' + p.name)?.value || '';
+      if (p.in === 'path') { path = path.replace('{' + p.name + '}', encodeURIComponent(val)); }
+      else if (p.in === 'query' && val) { queryParams.push(p.name + '=' + encodeURIComponent(val)); }
     });
-  </script>
+
+    let url = BASE + path;
+    if (queryParams.length) url += '?' + queryParams.join('&');
+
+    const headers = { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token };
+    let fetchOpts = { method: ep.method, headers };
+
+    if (ep.body && ['POST', 'PUT', 'PATCH'].includes(ep.method)) {
+      headers['Content-Type'] = 'application/json';
+      fetchOpts.body = document.getElementById('requestBody').value;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Sending...';
+    const startTime = Date.now();
+
+    try {
+      const res = await fetch(url, fetchOpts);
+      const elapsed = Date.now() - startTime;
+      let body;
+      const ct = res.headers.get('content-type') || '';
+      if (res.status === 204) { body = '(No content — deleted successfully)'; }
+      else if (ct.includes('json')) { body = JSON.stringify(await res.json(), null, 2); }
+      else { body = await res.text(); }
+      showResponse(res.status, body, elapsed);
+    } catch (err) {
+      showResponse('ERR', 'Network error: ' + err.message, Date.now() - startTime);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Send Request';
+  }
+
+  function showResponse(status, body, ms) {
+    const area = document.getElementById('responseArea');
+    const badge = document.getElementById('statusBadge');
+    badge.textContent = status;
+    if (status === 'ERR') badge.className = 'status-badge status-err';
+    else if (status >= 200 && status < 300) badge.className = 'status-badge status-2xx';
+    else if (status >= 400 && status < 500) badge.className = 'status-badge status-4xx';
+    else badge.className = 'status-badge status-5xx';
+
+    document.getElementById('responseBody').textContent = body;
+    document.getElementById('responseTime').textContent = ms + 'ms';
+    area.classList.add('visible');
+  }
+
+  onEndpointChange();
+</script>
+
 </body>
 </html>
