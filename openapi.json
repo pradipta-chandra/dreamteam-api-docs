@@ -160,6 +160,21 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectRecord"
+                },
+                "example": {
+                  "id": 1015771,
+                  "type": "contact",
+                  "properties": {
+                    "first_name": "Shivani",
+                    "last_name": "Shankar",
+                    "email": "shivanishankar@acme.com",
+                    "owner_id": 1000052,
+                    "contact_activity_status": "New",
+                    "criticality": "Yes"
+                  },
+                  "created_at": "2026-06-30T10:58:41.740762Z",
+                  "updated_at": "2026-06-30T10:58:41.740762Z",
+                  "created_by": 1000023
                 }
               }
             }
@@ -202,6 +217,70 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectRecord"
+                },
+                "examples": {
+                  "single-record": {
+                    "summary": "Single contact",
+                    "value": {
+                      "id": 1015680,
+                      "type": "contact",
+                      "properties": {
+                        "first_name": "Bravo",
+                        "last_name": "",
+                        "email": "bravo@dreamteam.bot",
+                        "source": "Meeting",
+                        "owner_id": 1000001,
+                        "contact_activity_status": "New",
+                        "engagement": "Low",
+                        "criticality": "Yes",
+                        "buying_role": [
+                          "Influencer"
+                        ],
+                        "last_activity_date": "2026-06-29T19:27:00Z",
+                        "last_enriched_at": "2026-06-29T19:01:10.139211487Z"
+                      },
+                      "created_at": "2026-06-29T19:00:33.228563Z",
+                      "updated_at": "2026-06-29T19:30:25.573715Z",
+                      "created_by": 1000001
+                    }
+                  },
+                  "with-associations": {
+                    "summary": "Deal with embedded associations",
+                    "value": {
+                      "id": 1011624,
+                      "type": "deal",
+                      "properties": {
+                        "name": "Apollo - May 2026",
+                        "amount": 100000.0,
+                        "expected_close_date": "2026-07-18T18:30:00Z",
+                        "stage_id": 1000003,
+                        "owner_id": 1000021,
+                        "pipeline_id": 1000000,
+                        "confidence": "Medium",
+                        "forecast_category": "Pipeline",
+                        "risk": "Medium",
+                        "status": "Red Flag",
+                        "last_activity_date": "2026-06-08T16:45:52Z"
+                      },
+                      "associations": {
+                        "company": {
+                          "records": [
+                            {
+                              "id": 1011597,
+                              "type": "company_deal_assoc"
+                            }
+                          ],
+                          "metadata": {
+                            "total": 1,
+                            "has_more": false
+                          }
+                        }
+                      },
+                      "created_at": "2026-05-20T13:00:55.857056Z",
+                      "updated_at": "2026-06-12T08:13:25.348504Z",
+                      "created_by": 1000021
+                    }
+                  }
                 }
               }
             }
@@ -305,6 +384,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectRecord"
+                },
+                "example": {
+                  "id": 1015782,
+                  "type": "contact",
+                  "properties": {
+                    "first_name": "sample yolo2",
+                    "last_name": "",
+                    "email": "sample@yolo24.com",
+                    "owner_id": null,
+                    "contact_activity_status": "New",
+                    "criticality": "Yes",
+                    "state": null,
+                    "linkedin": "www.linkedin.com/in/sampleyolo"
+                  },
+                  "created_at": "2026-06-30T11:46:12.210656Z",
+                  "updated_at": "2026-07-01T09:25:31.825186Z",
+                  "created_by": 1000017
                 }
               }
             }
@@ -622,6 +718,26 @@
                       "$ref": "#/components/schemas/PaginationMetadata"
                     }
                   }
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": 1007568,
+                      "type": "contact_deal_assoc"
+                    },
+                    {
+                      "id": 1007569,
+                      "type": "contact_deal_assoc"
+                    }
+                  ],
+                  "metadata": {
+                    "page": 0,
+                    "page_size": 50,
+                    "total_elements": 2,
+                    "total_pages": 1,
+                    "has_next": false,
+                    "has_previous": false
+                  }
                 }
               }
             }
@@ -658,6 +774,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectTypeDescriptor"
+                },
+                "example": {
+                  "name": "contact",
+                  "label": "Contact",
+                  "plural_label": "Contacts",
+                  "object_kind": "STANDARD",
+                  "version": 62,
+                  "fields": [
+                    {
+                      "name": "first_name",
+                      "type": "TEXT",
+                      "label": "First Name",
+                      "filterable": true,
+                      "read_only": false,
+                      "unique": false,
+                      "required": true
+                    },
+                    {
+                      "name": "email",
+                      "type": "EMAIL",
+                      "label": "Email",
+                      "filterable": true,
+                      "read_only": false,
+                      "unique": true,
+                      "required": true
+                    }
+                  ]
                 }
               }
             }
@@ -716,6 +859,42 @@
                     "metadata": {
                       "$ref": "#/components/schemas/PaginationMetadata"
                     }
+                  }
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": 1000054,
+                      "first_name": "Arjun",
+                      "last_name": "Manager",
+                      "primary_email": "arjun+mgr@example.com",
+                      "username": "arjun+mgr@example.com",
+                      "role": "sales_member",
+                      "title": "",
+                      "status": "ACTIVATED",
+                      "sales_user": false,
+                      "created_at": "2026-06-12T06:33:35.139985Z"
+                    },
+                    {
+                      "id": 1000051,
+                      "first_name": "Akarsh",
+                      "last_name": "",
+                      "primary_email": "akarsh@example.com",
+                      "username": "akarsh@example.com",
+                      "role": "sales_member",
+                      "title": "GTM - Sales",
+                      "status": "ACTIVATED",
+                      "sales_user": false,
+                      "created_at": "2026-06-08T10:29:13.104277Z"
+                    }
+                  ],
+                  "metadata": {
+                    "page": 0,
+                    "page_size": 20,
+                    "total_elements": 45,
+                    "total_pages": 3,
+                    "has_next": true,
+                    "has_previous": false
                   }
                 }
               }
@@ -809,6 +988,40 @@
                       "$ref": "#/components/schemas/PaginationMetadata"
                     }
                   }
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": 1000000,
+                      "name": "Default Pipeline",
+                      "description": "Standard deal flow pipeline with common stages.",
+                      "is_default": true,
+                      "deleted": false,
+                      "stages": [],
+                      "created_at": "2026-02-02T12:30:14.308047Z",
+                      "updated_at": "2026-05-20T10:06:06.332465Z",
+                      "created_by": 1000000
+                    },
+                    {
+                      "id": 1011137,
+                      "name": "Deal Sales Pipeline",
+                      "description": "Pipeline for managing standard deal opportunities.",
+                      "is_default": false,
+                      "deleted": false,
+                      "stages": [],
+                      "created_at": "2026-05-20T10:10:51.165824Z",
+                      "updated_at": "2026-05-20T10:10:51.165824Z",
+                      "created_by": 1000001
+                    }
+                  ],
+                  "metadata": {
+                    "page": 0,
+                    "page_size": 20,
+                    "total_elements": 4,
+                    "total_pages": 1,
+                    "has_next": false,
+                    "has_previous": false
+                  }
                 }
               }
             }
@@ -863,6 +1076,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Pipeline"
+                },
+                "example": {
+                  "id": 1000000,
+                  "name": "Default Pipeline",
+                  "description": "Standard deal flow pipeline with common stages.",
+                  "is_default": true,
+                  "deleted": false,
+                  "stages": [
+                    {
+                      "id": 1000002,
+                      "name": "Evaluation",
+                      "stage_order": 1,
+                      "stage_category": "Early Stage",
+                      "win_probability": 30,
+                      "is_closed": false,
+                      "entry_criteria": "Product demo or walkthrough done...",
+                      "pipeline_id": 1000000
+                    },
+                    {
+                      "id": 1000003,
+                      "name": "Proposal Sent",
+                      "stage_order": 3,
+                      "stage_category": "Mid-Level Stage",
+                      "win_probability": 40,
+                      "is_closed": false,
+                      "pipeline_id": 1000000
+                    },
+                    {
+                      "id": 1000006,
+                      "name": "Closed Won",
+                      "stage_order": 8,
+                      "stage_category": "Closed Won",
+                      "win_probability": 100,
+                      "is_closed": true,
+                      "pipeline_id": 1000000
+                    }
+                  ],
+                  "created_at": "2026-02-02T12:30:14.308047Z",
+                  "updated_at": "2026-05-20T10:06:06.332465Z",
+                  "created_by": 1000000
                 }
               }
             }
@@ -1549,7 +1802,7 @@
     },
     "responses": {
       "RecordPage": {
-        "description": "Paginated record list",
+        "description": "Paginated record list. When `?associations=` is passed, each record includes an `associations` block.",
         "content": {
           "application/json": {
             "schema": {
@@ -1565,26 +1818,162 @@
                   "$ref": "#/components/schemas/PaginationMetadata"
                 }
               }
+            },
+            "examples": {
+              "list-plain": {
+                "summary": "List contacts (no associations)",
+                "value": {
+                  "results": [
+                    {
+                      "id": 1015634,
+                      "type": "contact",
+                      "properties": {
+                        "first_name": "Ada",
+                        "last_name": "Lovelace",
+                        "email": "ada@example.com",
+                        "source": "Email",
+                        "owner_id": 1000001,
+                        "contact_activity_status": "New"
+                      },
+                      "created_at": "2026-06-29T10:23:27.444871Z",
+                      "updated_at": "2026-06-29T10:23:35.757096Z",
+                      "created_by": 1000001
+                    }
+                  ],
+                  "metadata": {
+                    "page": 0,
+                    "page_size": 5,
+                    "total_elements": 563,
+                    "total_pages": 113,
+                    "has_next": true,
+                    "has_previous": false
+                  }
+                }
+              },
+              "list-with-associations": {
+                "summary": "List deals with embedded associations",
+                "value": {
+                  "results": [
+                    {
+                      "id": 1008446,
+                      "type": "deal",
+                      "properties": {
+                        "name": "Acme Corp - May 2026",
+                        "amount": 200.0,
+                        "expected_close_date": "2026-07-03T18:30:00Z",
+                        "stage_id": 1000001,
+                        "owner_id": 1000032,
+                        "pipeline_id": 1000000
+                      },
+                      "associations": {
+                        "contact": {
+                          "records": [
+                            {
+                              "id": 1007568,
+                              "type": "contact_deal_assoc"
+                            }
+                          ],
+                          "metadata": {
+                            "total": 1,
+                            "has_more": false
+                          }
+                        },
+                        "company": {
+                          "records": [
+                            {
+                              "id": 1007569,
+                              "type": "company_deal_assoc"
+                            }
+                          ],
+                          "metadata": {
+                            "total": 1,
+                            "has_more": false
+                          }
+                        }
+                      },
+                      "created_at": "2026-05-05T06:32:14.062081Z",
+                      "updated_at": "2026-05-23T04:36:58.718301Z",
+                      "created_by": 1000001
+                    }
+                  ],
+                  "metadata": {
+                    "page": 0,
+                    "page_size": 5,
+                    "total_elements": 107,
+                    "total_pages": 22,
+                    "has_next": true,
+                    "has_previous": false
+                  }
+                }
+              }
             }
           }
         }
       },
       "BadRequest": {
-        "description": "Validation error, malformed body, or invalid filter",
+        "description": "Validation error \u2014 see the `errors` array for specifics.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "duplicate-value": {
+                "summary": "Duplicate unique value",
+                "value": {
+                  "code": "VALIDATION_FAILED",
+                  "message": "Field 'email' must be unique.",
+                  "errors": [
+                    {
+                      "code": "DUPLICATE_VALUE",
+                      "field": "email",
+                      "message": "Value 'umashankar@acme.com' already exists for this contact (conflicting record ID: 1012888)."
+                    }
+                  ]
+                }
+              },
+              "required-field-missing": {
+                "summary": "Required field missing",
+                "value": {
+                  "code": "VALIDATION_FAILED",
+                  "message": "Field 'email' is required",
+                  "errors": [
+                    {
+                      "code": "REQUIRED_FIELD_MISSING",
+                      "field": "email",
+                      "message": "Field 'email' is required"
+                    }
+                  ],
+                  "path": "/api/v2/objects/contact/records/1015879",
+                  "timestamp": "2026-07-02T08:48:05.199294005"
+                }
+              }
             }
           }
         }
       },
       "NotFound": {
-        "description": "Resource not found \u2014 either the record ID does not exist for the given object type, or the Bearer token is invalid/expired (\"No valid organization found\").",
+        "description": "Resource not found \u2014 the record ID does not exist for the given object type, or the object type slug itself is invalid (e.g. `contacts` instead of `contact`).",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "record-not-found": {
+                "summary": "Record ID doesn't exist",
+                "value": {
+                  "code": "NOT_FOUND",
+                  "message": "Custom object data not found with id: 24 and objectName: contact"
+                }
+              },
+              "unknown-object-type": {
+                "summary": "Object type is plural / unknown",
+                "value": {
+                  "code": "NOT_FOUND",
+                  "message": "Unknown object type: contacts"
+                }
+              }
             }
           }
         }
