@@ -1,646 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dreamteam CRM - API Documentation</title>
-  <meta name="description" content="Dreamteam CRM API Reference - Records, Associations, Users, Pipelines">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dreamteam CRM API Documentation</title>
+  <meta name="description" content="API reference for the Holonet Objects API v2 — records, associations, users, pipelines, with an inline Test Request playground." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --dt-primary: #4F46E5;
-      --dt-primary-dark: #3730A3;
-      --dt-bg: #ffffff;
       --dt-text: #1e293b;
-      --dt-text-secondary: #64748b;
+      --dt-text-secondary: rgba(255,255,255,0.85);
       --dt-border: #e2e8f0;
-      --dt-code-bg: #f8fafc;
-      --dt-nav-bg: #f1f5f9;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: var(--dt-text);
-      background: var(--dt-bg);
-    }
-
-    /* Top bar */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--dt-text); background: #fff; }
     .topbar {
       background: var(--dt-primary);
-      color: white;
+      color: #fff;
       padding: 14px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
     }
-    .topbar h1 {
-      font-size: 18px;
+    .topbar h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .topbar h1 .badge {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: -0.3px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      letter-spacing: 0.4px;
+      vertical-align: middle;
     }
+    .topbar-links { font-size: 14px; }
     .topbar-links a {
-      color: rgba(255,255,255,0.85);
+      color: var(--dt-text-secondary);
       text-decoration: none;
-      font-size: 14px;
       margin-left: 24px;
       transition: color 0.15s;
     }
-    .topbar-links a:hover { color: white; }
-    .topbar-links a.active {
-      color: white;
-      border-bottom: 2px solid white;
-      padding-bottom: 2px;
-    }
-
-    /* Layout */
-    .layout {
-      display: flex;
-      min-height: calc(100vh - 52px);
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 260px;
-      background: var(--dt-nav-bg);
-      border-right: 1px solid var(--dt-border);
-      padding: 24px 0;
-      position: sticky;
-      top: 52px;
-      height: calc(100vh - 52px);
-      overflow-y: auto;
-    }
-    .sidebar-section {
-      padding: 0 20px;
-      margin-bottom: 24px;
-    }
-    .sidebar-section h3 {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--dt-text-secondary);
-      margin-bottom: 8px;
-    }
-    .sidebar-section a {
-      display: block;
-      font-size: 13px;
-      color: var(--dt-text);
-      text-decoration: none;
-      padding: 5px 8px;
-      border-radius: 4px;
-      margin-bottom: 2px;
-      transition: background 0.15s;
-    }
-    .sidebar-section a:hover { background: rgba(0,0,0,0.05); }
-    .sidebar-section a .method {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-right: 6px;
-      font-family: monospace;
-    }
-    .method-get { background: #dbeafe; color: #1d4ed8; }
-    .method-post { background: #dcfce7; color: #15803d; }
-    .method-put { background: #fef3c7; color: #b45309; }
-    .method-patch { background: #fef3c7; color: #b45309; }
-    .method-delete { background: #fee2e2; color: #dc2626; }
-
-    /* Main content */
-    .main {
-      flex: 1;
-      padding: 40px 48px;
-      max-width: 900px;
-    }
-
-    .main h2 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      letter-spacing: -0.5px;
-    }
-    .main h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-top: 48px;
-      margin-bottom: 12px;
-      padding-top: 24px;
-      border-top: 1px solid var(--dt-border);
-    }
-    .main p {
-      font-size: 15px;
-      line-height: 1.7;
-      color: var(--dt-text-secondary);
-      margin-bottom: 16px;
-    }
-
-    /* Endpoint block */
-    .endpoint {
-      background: var(--dt-code-bg);
-      border: 1px solid var(--dt-border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .endpoint .method {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-family: 'SF Mono', monospace;
-    }
-    .endpoint .path { color: var(--dt-text); }
-
-    /* Collapsible */
-    details {
-      border: 1px solid var(--dt-border);
-      border-radius: 8px;
-      margin-bottom: 12px;
-      overflow: hidden;
-    }
-    summary {
-      padding: 14px 20px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      background: var(--dt-code-bg);
-      user-select: none;
-      list-style: none;
-    }
-    summary::-webkit-details-marker { display: none; }
-    summary::before {
-      content: '\25B6';
-      display: inline-block;
-      margin-right: 10px;
-      font-size: 10px;
-      transition: transform 0.2s;
-    }
-    details[open] summary::before { transform: rotate(90deg); }
-    details .content {
-      padding: 16px 20px;
-      border-top: 1px solid var(--dt-border);
-    }
-
-    /* Code blocks */
-    pre {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 16px 20px;
-      border-radius: 6px;
-      font-size: 13px;
-      line-height: 1.6;
-      overflow-x: auto;
-      margin-bottom: 12px;
-    }
-    code {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-    }
-    p code, li code {
-      background: var(--dt-code-bg);
-      border: 1px solid var(--dt-border);
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: var(--dt-primary);
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-    th {
-      text-align: left;
-      padding: 10px 12px;
-      background: var(--dt-code-bg);
-      border-bottom: 2px solid var(--dt-border);
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--dt-text-secondary);
-    }
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--dt-border);
-    }
-
-    /* Status badges */
-    .status {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: monospace;
-    }
-    .status-200 { background: #dcfce7; color: #15803d; }
-    .status-201 { background: #dcfce7; color: #15803d; }
-    .status-204 { background: #dcfce7; color: #15803d; }
-    .status-400 { background: #fef3c7; color: #b45309; }
-    .status-401 { background: #fee2e2; color: #dc2626; }
-    .status-403 { background: #fee2e2; color: #dc2626; }
-    .status-404 { background: #fef3c7; color: #b45309; }
-    .status-409 { background: #fef3c7; color: #b45309; }
-    .status-429 { background: #fee2e2; color: #dc2626; }
-
-    /* Utility */
-    .muted { color: var(--dt-text-secondary); }
-    .mt-4 { margin-top: 32px; }
-    .mb-2 { margin-bottom: 16px; }
-    ul { padding-left: 20px; margin-bottom: 16px; }
-    li { font-size: 14px; line-height: 1.8; }
+    .topbar-links a:hover { color: #fff; }
+    #api-reference-host { min-height: calc(100vh - 52px); }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1>Dreamteam CRM API</h1>
+  <h1>Dreamteam CRM API <span class="badge">v2</span></h1>
   <div class="topbar-links">
-    <a href="index.html" class="active">Reference</a>
-    <a href="try-it.html">Try It</a>
+    <a href="https://github.com/pradipta-chandra/dreamteam-api-docs" target="_blank" rel="noopener">GitHub</a>
   </div>
 </div>
 
-<div class="layout">
-  <nav class="sidebar">
-    <div class="sidebar-section">
-      <h3>Getting Started</h3>
-      <a href="#introduction">Introduction</a>
-      <a href="#authentication">Authentication</a>
-      <a href="#pagination">Pagination</a>
-      <a href="#errors">Errors</a>
-    </div>
-    <div class="sidebar-section">
-      <h3>Records</h3>
-      <a href="#list-records"><span class="method method-get">GET</span>List records</a>
-      <a href="#create-record"><span class="method method-post">POST</span>Create record</a>
-      <a href="#get-record"><span class="method method-get">GET</span>Get record</a>
-      <a href="#replace-record"><span class="method method-put">PUT</span>Replace record</a>
-      <a href="#patch-record"><span class="method method-patch">PATCH</span>Update record</a>
-      <a href="#delete-record"><span class="method method-delete">DEL</span>Delete record</a>
-      <a href="#filter-records"><span class="method method-post">POST</span>Filter records</a>
-      <a href="#batch-records"><span class="method method-post">POST</span>Batch operations</a>
-    </div>
-    <div class="sidebar-section">
-      <h3>Associations</h3>
-      <a href="#list-links"><span class="method method-get">GET</span>List links</a>
-      <a href="#link-records"><span class="method method-put">PUT</span>Link records</a>
-      <a href="#unlink-records"><span class="method method-delete">DEL</span>Unlink records</a>
-      <a href="#bulk-links"><span class="method method-post">POST</span>Bulk link/unlink</a>
-    </div>
-    <div class="sidebar-section">
-      <h3>Schema</h3>
-      <a href="#describe-object"><span class="method method-get">GET</span>Describe type</a>
-    </div>
-    <div class="sidebar-section">
-      <h3>Users</h3>
-      <a href="#list-users"><span class="method method-get">GET</span>List users</a>
-      <a href="#create-user"><span class="method method-post">POST</span>Create user</a>
-      <a href="#get-user"><span class="method method-get">GET</span>Get user</a>
-      <a href="#update-user"><span class="method method-patch">PATCH</span>Update user</a>
-      <a href="#deactivate-user"><span class="method method-delete">DEL</span>Deactivate user</a>
-    </div>
-    <div class="sidebar-section">
-      <h3>Pipelines</h3>
-      <a href="#list-pipelines"><span class="method method-get">GET</span>List pipelines</a>
-      <a href="#create-pipeline"><span class="method method-post">POST</span>Create pipeline</a>
-      <a href="#get-pipeline"><span class="method method-get">GET</span>Get pipeline</a>
-      <a href="#replace-pipeline"><span class="method method-put">PUT</span>Replace pipeline</a>
-      <a href="#update-pipeline"><span class="method method-patch">PATCH</span>Update pipeline</a>
-      <a href="#delete-pipeline"><span class="method method-delete">DEL</span>Delete pipeline</a>
-    </div>
-  </nav>
-
-  <main class="main">
-    <h2 id="introduction">Dreamteam CRM API</h2>
-    <p>A single, generic record API for every CRM object - contacts, deals, companies, meetings, notes, and custom objects - all served through one contract.</p>
-
-    <h3 id="authentication">Authentication</h3>
-    <p>All requests require an OAuth2 bearer token. The organization is resolved from the token's <code>orgId</code> claim - no tenant header or subdomain needed.</p>
-    <div class="endpoint">
-      <span class="path">Authorization: Bearer &lt;YOUR_TOKEN&gt;</span>
-    </div>
-    <p>How to get your token:</p>
-    <p class="muted"><em>Section in progress - details will be added once the token generation flow is available in the product.</em></p>
-
-    <h3 id="pagination">Pagination</h3>
-    <p>All list endpoints return paginated results using <code>page</code> (zero-based) and <code>page_size</code> (max 200, default 20).</p>
-    <details>
-      <summary>Response metadata shape</summary>
-      <div class="content">
-<pre>{
-  "results": [ ... ],
-  "metadata": {
-    "page": 0,
-    "page_size": 20,
-    "total_elements": 137,
-    "total_pages": 7,
-    "has_next": true,
-    "has_previous": false
-  }
-}</pre>
-      </div>
-    </details>
-
-    <h3 id="errors">Error Responses</h3>
-    <table>
-      <tr><th>Status</th><th>Meaning</th><th>Description</th></tr>
-      <tr><td><span class="status status-200">200</span></td><td>Success</td><td>Request successful</td></tr>
-      <tr><td><span class="status status-201">201</span></td><td>Created</td><td>Record created. <code>Location</code> header has the URI</td></tr>
-      <tr><td><span class="status status-204">204</span></td><td>No Content</td><td>Deleted successfully. No response body</td></tr>
-      <tr><td><span class="status status-400">400</span></td><td>Bad Request</td><td>Validation error, malformed body, or invalid filter</td></tr>
-      <tr><td><span class="status status-401">401</span></td><td>Unauthorized</td><td>Missing, invalid, or expired bearer token</td></tr>
-      <tr><td><span class="status status-403">403</span></td><td>Forbidden</td><td>Authenticated but RBAC denies access to this object/record/field</td></tr>
-      <tr><td><span class="status status-404">404</span></td><td>Not Found</td><td>Unknown object type or record ID</td></tr>
-      <tr><td><span class="status status-409">409</span></td><td>Conflict</td><td>Unique constraint violation or lifecycle hook veto</td></tr>
-      <tr><td><span class="status status-429">429</span></td><td>Rate Limited</td><td>Per-tenant rate limit exceeded. Check <code>Retry-After</code> header</td></tr>
-    </table>
-    <details>
-      <summary>Error response shape</summary>
-      <div class="content">
-<pre>{
-  "code": "VALIDATION_FAILED",
-  "message": "Request validation failed",
-  "errors": [
-    {
-      "code": "REQUIRED_FIELD_MISSING",
-      "field": "email",
-      "message": "Email is required"
-    }
-  ]
-}</pre>
-      </div>
-    </details>
-
-    <!-- RECORDS -->
-    <h2 class="mt-4">Records</h2>
-    <p>CRUD, filter, and batch operations over any object type. Replace <code>{object}</code> with the type slug (e.g., <code>contact</code>, <code>deal</code>, <code>company</code>).</p>
-
-    <h3 id="list-records">List Records</h3>
-    <div class="endpoint">
-      <span class="method method-get">GET</span>
-      <span class="path">/api/v1/objects/{object}/records</span>
-    </div>
-    <p>Returns a page of records the caller is authorized to view. RBAC row-level scoped.</p>
-    <table>
-      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
-      <tr><td><code>page</code></td><td>integer</td><td>0</td><td>Zero-based page index</td></tr>
-      <tr><td><code>page_size</code></td><td>integer</td><td>20</td><td>Page size (max 200)</td></tr>
-      <tr><td><code>sort</code></td><td>string</td><td>-</td><td>Sort spec, e.g. <code>created_at,desc</code></td></tr>
-      <tr><td><code>associations</code></td><td>string[]</td><td>-</td><td>Object types to embed (repeatable)</td></tr>
-    </table>
-    <details>
-      <summary>curl example</summary>
-      <div class="content">
-<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records?page=0&page_size=20&sort=created_at,desc' \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer &lt;TOKEN&gt;'</pre>
-      </div>
-    </details>
-
-    <h3 id="create-record">Create a Record</h3>
-    <div class="endpoint">
-      <span class="method method-post">POST</span>
-      <span class="path">/api/v1/objects/{object}/records</span>
-    </div>
-    <p>Creates one record. Schema validation, dedup checks, and lifecycle hooks run in the write transaction.</p>
-    <details>
-      <summary>curl example</summary>
-      <div class="content">
-<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records' \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer &lt;TOKEN&gt;' \
-  --data '{
-    "properties": {
-      "first_name": "Jane",
-      "last_name": "Okafor",
-      "email": "jane@acme.com",
-      "owner_id": 42
-    },
-    "associations": [
-      { "id": 456, "kind": "company" }
-    ]
-  }'</pre>
-      </div>
-    </details>
-
-    <h3 id="get-record">Get a Record by ID</h3>
-    <div class="endpoint">
-      <span class="method method-get">GET</span>
-      <span class="path">/api/v1/objects/{object}/records/{id}</span>
-    </div>
-    <p>Fetch one record. Use <code>?associations=contact&associations=company</code> to embed linked records (capped at 100 per type).</p>
-    <details>
-      <summary>curl example</summary>
-      <div class="content">
-<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/contact/records/123' \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer &lt;TOKEN&gt;'</pre>
-      </div>
-    </details>
-    <details>
-      <summary>Sample response</summary>
-      <div class="content">
-<pre>{
-  "id": 123,
-  "type": "contact",
-  "properties": {
-    "first_name": "Jane",
-    "last_name": "Okafor",
-    "email": "jane@acme.com",
-    "owner_id": 42
-  },
-  "associations": {},
-  "created_at": "2026-06-25T12:00:00Z",
-  "updated_at": "2026-06-25T12:05:00Z",
-  "created_by": 7
-}</pre>
-      </div>
-    </details>
-
-    <h3 id="replace-record">Replace a Record</h3>
-    <div class="endpoint">
-      <span class="method method-put">PUT</span>
-      <span class="path">/api/v1/objects/{object}/records/{id}</span>
-    </div>
-    <p>Full replace. Fields the schema allows but the payload omits are cleared. For partial edits, use PATCH.</p>
-
-    <h3 id="patch-record">Partially Update a Record</h3>
-    <div class="endpoint">
-      <span class="method method-patch">PATCH</span>
-      <span class="path">/api/v1/objects/{object}/records/{id}</span>
-    </div>
-    <p>Only the fields you send get changed. Omitted fields stay untouched. To clear a field, send it with <code>null</code>.</p>
-
-    <h3 id="delete-record">Delete a Record</h3>
-    <div class="endpoint">
-      <span class="method method-delete">DELETE</span>
-      <span class="path">/api/v1/objects/{object}/records/{id}</span>
-    </div>
-    <p>Soft-delete. Lifecycle hooks may veto (e.g., a stage still referenced by deals). Returns <code>204</code>.</p>
-
-    <h3 id="filter-records">Filter Records</h3>
-    <div class="endpoint">
-      <span class="method method-post">POST</span>
-      <span class="path">/api/v1/objects/{object}/records/filter</span>
-    </div>
-    <p>Compound filtering. Filter groups are OR'd; filters within a group are AND'd (configurable). Supports lookup paths (<code>owner_id.email</code>) and association paths (<code>@contact_company.name</code>).</p>
-    <details>
-      <summary>Filter operators</summary>
-      <div class="content">
-        <table>
-          <tr><th>Operator</th><th>Value field</th><th>Description</th></tr>
-          <tr><td><code>EQUALS</code></td><td><code>value</code></td><td>Exact match</td></tr>
-          <tr><td><code>NOT_EQUALS</code></td><td><code>value</code></td><td>Not equal</td></tr>
-          <tr><td><code>CONTAINS</code></td><td><code>value</code></td><td>Substring match</td></tr>
-          <tr><td><code>NOT_CONTAINS</code></td><td><code>value</code></td><td>Does not contain</td></tr>
-          <tr><td><code>STARTS_WITH</code></td><td><code>value</code></td><td>Prefix match</td></tr>
-          <tr><td><code>ENDS_WITH</code></td><td><code>value</code></td><td>Suffix match</td></tr>
-          <tr><td><code>GREATER_THAN</code></td><td><code>value</code></td><td>Greater than</td></tr>
-          <tr><td><code>LESS_THAN</code></td><td><code>value</code></td><td>Less than</td></tr>
-          <tr><td><code>GREATER_THAN_OR_EQUALS</code></td><td><code>value</code></td><td>Greater than or equal</td></tr>
-          <tr><td><code>LESS_THAN_OR_EQUALS</code></td><td><code>value</code></td><td>Less than or equal</td></tr>
-          <tr><td><code>IN</code></td><td><code>values</code></td><td>Value in list</td></tr>
-          <tr><td><code>NOT_IN</code></td><td><code>values</code></td><td>Value not in list</td></tr>
-          <tr><td><code>IS_NULL</code></td><td>none</td><td>Field is empty</td></tr>
-          <tr><td><code>IS_NOT_NULL</code></td><td>none</td><td>Field is not empty</td></tr>
-          <tr><td><code>BETWEEN</code></td><td><code>values</code> (2)</td><td>Range match (inclusive)</td></tr>
-          <tr><td><code>NOT_BETWEEN</code></td><td><code>values</code> (2)</td><td>Outside range</td></tr>
-        </table>
-      </div>
-    </details>
-    <details>
-      <summary>curl example - open deals over 10k</summary>
-      <div class="content">
-<pre>curl --location 'https://api.dreamteamcrm.ai/api/v1/objects/deal/records/filter' \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --header 'Authorization: Bearer &lt;TOKEN&gt;' \
-  --data '{
-    "filter_groups": [
-      {
-        "logical_operator": "AND",
-        "filters": [
-          { "field_path": "status", "operator": "EQUALS", "value": "open" },
-          { "field_path": "amount", "operator": "GREATER_THAN", "value": 10000 },
-          { "field_path": "owner_id", "operator": "EQUALS", "value": 100 }
-        ]
-      }
-    ],
-    "sort": { "field": "created_at", "direction": "DESC" },
-    "pagination": { "page": 0, "page_size": 20 }
-  }'</pre>
-      </div>
-    </details>
-
-    <h3 id="batch-records">Batch Operations</h3>
-    <div class="endpoint">
-      <span class="method method-post">POST</span>
-      <span class="path">/api/v1/objects/{object}/records/batch</span>
-    </div>
-    <p>Process up to 100 records in one call. Operations: <code>create</code>, <code>read</code>, <code>update</code>, <code>upsert</code>, <code>delete</code>. Set <code>all_or_none: true</code> for transactional mode.</p>
-
-    <!-- ASSOCIATIONS -->
-    <h2 class="mt-4">Associations</h2>
-    <p>Record-to-record links. The embed cap on record responses is 100 per type - use these endpoints to page beyond that or manage links directly.</p>
-
-    <h3 id="list-links">List Association Links</h3>
-    <div class="endpoint">
-      <span class="method method-get">GET</span>
-      <span class="path">/api/v1/objects/{object}/records/{id}/associations/{target_type}</span>
-    </div>
-    <p>Page through a record's links of one associated object type. Returns <code>{id, type}</code> entries only (no record data).</p>
-
-    <h3 id="link-records">Link Two Records</h3>
-    <div class="endpoint">
-      <span class="method method-put">PUT</span>
-      <span class="path">.../{id}/associations/{target_type}/{target_id}</span>
-    </div>
-    <p>Idempotent. Ensures the link exists. Send <code>{"type": "primary_contact"}</code> to pin a labeled association.</p>
-
-    <h3 id="unlink-records">Unlink Two Records</h3>
-    <div class="endpoint">
-      <span class="method method-delete">DELETE</span>
-      <span class="path">.../{id}/associations/{target_type}/{target_id}</span>
-    </div>
-    <p>Idempotent. Removes the link if present. Use <code>?type=</code> to remove only a specific labeled association.</p>
-
-    <h3 id="bulk-links">Bulk Link/Unlink</h3>
-    <div class="endpoint">
-      <span class="method method-post">POST</span>
-      <span class="path">.../{id}/associations/{target_type}/batch</span>
-    </div>
-    <p>Up to 1000 IDs per call. Transactional - any invalid target fails the whole batch.</p>
-
-    <!-- SCHEMA -->
-    <h2 class="mt-4">Schema</h2>
-
-    <h3 id="describe-object">Describe an Object Type</h3>
-    <div class="endpoint">
-      <span class="method method-get">GET</span>
-      <span class="path">/api/v1/objects/{object}</span>
-    </div>
-    <p>Returns the effective schema - field names, types, whether required, filterable, searchable. Use before creating or updating records.</p>
-
-    <!-- USERS -->
-    <h2 class="mt-4">Users</h2>
-    <p>First-class identity resource. Secret fields (tokens, OTP, lockout) are never returned.</p>
-
-    <h3 id="list-users">List Users</h3>
-    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/users</span></div>
-
-    <h3 id="create-user">Create (Provision) a User</h3>
-    <div class="endpoint"><span class="method method-post">POST</span><span class="path">/api/v1/users</span></div>
-
-    <h3 id="get-user">Get a User</h3>
-    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/users/{id}</span></div>
-
-    <h3 id="update-user">Update a User</h3>
-    <div class="endpoint"><span class="method method-patch">PATCH</span><span class="path">/api/v1/users/{id}</span></div>
-
-    <h3 id="deactivate-user">Deactivate a User</h3>
-    <div class="endpoint"><span class="method method-delete">DELETE</span><span class="path">/api/v1/users/{id}</span></div>
-
-    <!-- PIPELINES -->
-    <h2 class="mt-4">Pipelines</h2>
-    <p>First-class pipeline resource. Owns stage records. Deletion is vetoed while stages still reference the pipeline.</p>
-
-    <h3 id="list-pipelines">List Pipelines</h3>
-    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/pipelines</span></div>
-
-    <h3 id="create-pipeline">Create a Pipeline</h3>
-    <div class="endpoint"><span class="method method-post">POST</span><span class="path">/api/v1/pipelines</span></div>
-
-    <h3 id="get-pipeline">Get a Pipeline</h3>
-    <div class="endpoint"><span class="method method-get">GET</span><span class="path">/api/v1/pipelines/{id}</span></div>
-
-    <h3 id="replace-pipeline">Replace a Pipeline</h3>
-    <div class="endpoint"><span class="method method-put">PUT</span><span class="path">/api/v1/pipelines/{id}</span></div>
-
-    <h3 id="update-pipeline">Update a Pipeline</h3>
-    <div class="endpoint"><span class="method method-patch">PATCH</span><span class="path">/api/v1/pipelines/{id}</span></div>
-
-    <h3 id="delete-pipeline">Delete a Pipeline</h3>
-    <div class="endpoint"><span class="method method-delete">DELETE</span><span class="path">/api/v1/pipelines/{id}</span></div>
-
-    <p class="mt-4 muted" style="font-size:13px;">Last updated: June 2026</p>
-  </main>
+<div id="api-reference-host">
+  <script id="api-reference" type="application/json">{"openapi": "3.0.3", "info": {"title": "Holonet Objects API", "description": "The Dreamteam CRM API lets you programmatically access and manage your CRM data \u2014 contacts, companies, deals, users, and pipelines. All endpoints follow REST conventions and return JSON.\n\n## Authentication\nAll requests require an OAuth2 bearer token. Your Bearer token identifies your organization \u2014 no tenant header or subdomain needed. Get your token from **Profile \u2192 API Token**.\n\n## Content-Type\nUse `application/json` for POST and PUT. Use `application/merge-patch+json` for PATCH.\n\n## Naming\nRequest and response bodies are **snake_case**. The Filter endpoint additionally accepts camelCase field names (`filterGroups`/`fieldPath`) \u2014 but `fieldPath` *values* are always snake_case attribute names (e.g. `owner_id`).\n\n## Associations\nAssociations live in their own block \u2014 never inside `properties`. Embed up to 100 per type via `?associations=` query parameter. Use the dedicated Associations endpoints to page beyond that. For Create record, pass an optional `associations: [{id, kind}]` array to link related records at creation time.", "version": "2.0.0", "contact": {"name": "Dreamteam Support", "email": "support@dreamteam.co"}}, "servers": [{"url": "https://api.dreamteamcrm.ai", "description": "Production"}], "security": [{"bearerAuth": []}], "tags": [{"name": "Records", "description": "Create, read, update, and filter operations over any object type"}, {"name": "Associations", "description": "Record-to-record links (read-only)"}, {"name": "Schema", "description": "Object type metadata, field definitions, and association definitions"}, {"name": "Users", "description": "User identity resource"}, {"name": "Pipelines", "description": "Deal pipeline management"}], "paths": {"/api/v2/objects/{object}/records": {"get": {"tags": ["Records"], "operationId": "listRecords", "summary": "List records", "description": "Returns a page of records the caller is authorized to view. RBAC row-level scoped.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"}, {"name": "sort", "in": "query", "schema": {"type": "string", "example": "created_at,desc"}, "description": "Sort spec, e.g. `created_at,desc`"}, {"$ref": "#/components/parameters/Associations"}], "responses": {"200": {"$ref": "#/components/responses/RecordPage"}, "500": {"$ref": "#/components/responses/ServerError"}}}, "post": {"tags": ["Records"], "operationId": "createRecord", "summary": "Create a record", "description": "Creates one record. Schema validation, dedup checks, and lifecycle hooks run in the write transaction.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecordCreateRequest"}, "example": {"properties": {"name": "Enterprise License - Acme Corp", "amount": 50000, "pipeline_id": 1, "stage_id": 2, "expected_close_date": "2026-08-31T00:00:00Z", "owner_id": 789}, "associations": [{"id": 456, "kind": "company"}, {"id": 123, "kind": "contact"}]}}}}, "responses": {"201": {"description": "Record created", "headers": {"Location": {"description": "URI of the created record", "schema": {"type": "string"}}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ObjectRecord"}}}}, "400": {"$ref": "#/components/responses/BadRequest"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/objects/{object}/records/{id}": {"get": {"tags": ["Records"], "operationId": "getRecord", "summary": "Get a record by ID", "description": "Fetch one record. Use `?associations=contact&associations=company` to embed linked records (capped at 100 per type).", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"$ref": "#/components/parameters/RecordId"}, {"$ref": "#/components/parameters/Associations"}], "responses": {"200": {"description": "Record found", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ObjectRecord"}}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}, "put": {"tags": ["Records"], "operationId": "replaceRecord", "summary": "Replace a record (full update)", "description": "Full replace. Fields the schema allows but the payload omits are cleared. For partial edits, use PATCH.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"$ref": "#/components/parameters/RecordId"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecordUpdateRequest"}}}}, "responses": {"200": {"description": "Record replaced", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ObjectRecord"}}}}, "400": {"$ref": "#/components/responses/BadRequest"}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}, "patch": {"tags": ["Records"], "operationId": "patchRecord", "summary": "Partially update a record", "description": "Merges the provided fields into the existing record. Omitted fields are left unchanged. Set a field to `null` to explicitly clear it. Content-Type must be `application/merge-patch+json`.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"$ref": "#/components/parameters/RecordId"}], "requestBody": {"required": true, "content": {"application/merge-patch+json": {"schema": {"$ref": "#/components/schemas/RecordUpdateRequest"}, "example": {"properties": {"state": null, "linkedin": "www.linkedin.com/in/sampleyolo"}}}}}, "responses": {"200": {"description": "Record updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ObjectRecord"}}}}, "400": {"$ref": "#/components/responses/BadRequest"}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/objects/{object}/records/filter": {"post": {"tags": ["Records"], "operationId": "filterRecords", "summary": "Filter records", "description": "Compound filtering. Filter groups are OR'd; filters within a group are AND'd. The request body accepts BOTH camelCase (`filterGroups` / `fieldPath`) and snake_case (`filter_groups` / `field_path`) field names \u2014 `field_path` *values* are always snake_case attribute names (e.g. `owner_id`). For the 2-request (vs N+1) hydrate pattern, use `IN` against the `id` attribute to resolve associated IDs collected from an embedded record page.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FilterRequest"}, "example": {"filter_groups": [{"logical_operator": "AND", "filters": [{"field_path": "owner_id", "operator": "EQUALS", "value": 789}, {"field_path": "city", "operator": "EQUALS", "value": "San Francisco"}, {"field_path": "last_activity_date", "operator": "GREATER_THAN", "value": "2026-04-01T00:00:00Z"}]}], "pagination": {"page": 0, "page_size": 25}, "sort": {"field": "last_activity_date", "direction": "DESC"}}}}}, "responses": {"200": {"$ref": "#/components/responses/RecordPage"}, "400": {"$ref": "#/components/responses/BadRequest"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/objects/{object}/records/{id}/associations/{target_type}": {"get": {"tags": ["Associations"], "operationId": "listAssociations", "summary": "List association links", "description": "Page through a record's links of one associated object type. Returns raw `{id, type}` link entries (no record data), ordered `created_at,id`. Use this to page past the 100-entry embed cap on record responses. **Link writes (create/update/delete) are not implemented yet.**", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"$ref": "#/components/parameters/RecordId"}, {"$ref": "#/components/parameters/TargetType"}, {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"}], "responses": {"200": {"description": "Paginated association links", "content": {"application/json": {"schema": {"type": "object", "properties": {"results": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "integer"}, "type": {"type": "string"}}}}, "metadata": {"$ref": "#/components/schemas/PaginationMetadata"}}}}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/objects/{object}": {"get": {"tags": ["Schema"], "operationId": "describeObject", "summary": "Describe an object type", "description": "Returns the effective schema \u2014 field names, types, whether required, filterable, searchable.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}], "responses": {"200": {"description": "Object type descriptor", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ObjectTypeDescriptor"}}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/users": {"get": {"tags": ["Users"], "operationId": "listUsers", "summary": "List users", "description": "RBAC-scoped page of users in the caller's organization. Returns the safe-field projection only \u2014 token/password/OTP/lockout/api_key columns are never returned.", "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"}, {"name": "sort", "in": "query", "schema": {"type": "string", "example": "created_at,desc"}, "description": "Sort spec; field is snake_case"}], "responses": {"200": {"description": "Paginated user list", "content": {"application/json": {"schema": {"type": "object", "properties": {"results": {"type": "array", "items": {"$ref": "#/components/schemas/UserSafe"}}, "metadata": {"$ref": "#/components/schemas/PaginationMetadata"}}}}}}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/users/{id}": {"get": {"tags": ["Users"], "operationId": "getUser", "summary": "Get a user", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "User", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserSafe"}}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}, "description": "Safe-field projection only \u2014 token/password/OTP/lockout/api_key columns are never returned."}}, "/api/v2/pipelines": {"get": {"tags": ["Pipelines"], "operationId": "listPipelines", "summary": "List pipelines", "responses": {"200": {"description": "Paginated pipeline list", "content": {"application/json": {"schema": {"type": "object", "properties": {"results": {"type": "array", "items": {"$ref": "#/components/schemas/Pipeline"}}, "metadata": {"$ref": "#/components/schemas/PaginationMetadata"}}}}}}, "500": {"$ref": "#/components/responses/ServerError"}}, "parameters": [{"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"}, {"name": "sort", "in": "query", "schema": {"type": "string", "example": "created_at,desc"}, "description": "Sort spec; field is snake_case"}]}}, "/api/v2/pipelines/{id}": {"get": {"tags": ["Pipelines"], "operationId": "getPipeline", "summary": "Get a pipeline", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}], "responses": {"200": {"description": "Pipeline (with embedded stages)", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Pipeline"}}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}}, "/api/v2/objects/{object}/associations": {"get": {"tags": ["Schema"], "operationId": "listAssociationDefinitions", "summary": "List association definitions", "description": "Returns the association definitions a type can participate in. Use the optional `target_type` query parameter to filter to definitions linking to a specific target. Reads through to the association catalog \u2014 useful for discovering valid `kind`/`type` before reading links.", "parameters": [{"$ref": "#/components/parameters/ObjectType"}, {"name": "target_type", "in": "query", "required": false, "schema": {"type": "string", "example": "company"}, "description": "Optional \u2014 restrict to definitions linking to this target object type"}], "responses": {"200": {"description": "Association definitions", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/AssociationDefinition"}}, "example": [{"association_name": "company_deal_assoc", "label": "Company", "source_object": "deal", "target_object": "company", "cardinality": "MANY_TO_MANY", "is_default": false, "is_lookup": true, "is_active": true}]}}}, "404": {"$ref": "#/components/responses/NotFound"}, "500": {"$ref": "#/components/responses/ServerError"}}}}}, "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "OAuth2 bearer token. Organization resolved from `orgId` claim."}}, "parameters": {"ObjectType": {"name": "object", "in": "path", "required": true, "schema": {"type": "string", "example": "contact"}, "description": "Object type slug (e.g., contact, deal, company, note, meeting)"}, "RecordId": {"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "example": 123}, "description": "Record ID"}, "TargetType": {"name": "target_type", "in": "path", "required": true, "schema": {"type": "string", "example": "company"}, "description": "Associated object type"}, "TargetId": {"name": "target_id", "in": "path", "required": true, "schema": {"type": "integer"}, "description": "Target record ID"}, "Page": {"name": "page", "in": "query", "schema": {"type": "integer", "default": 0, "minimum": 0}, "description": "Zero-based page index"}, "PageSize": {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20, "maximum": 100}, "description": "Page size (max 100)"}, "Associations": {"name": "associations", "in": "query", "schema": {"type": "array", "items": {"type": "string"}}, "description": "Object types to embed (repeatable, capped at 100 per type)"}}, "schemas": {"ObjectRecord": {"type": "object", "properties": {"id": {"type": "integer"}, "type": {"type": "string"}, "properties": {"type": "object", "additionalProperties": true}, "associations": {"type": "object", "additionalProperties": true}, "created_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"}, "created_by": {"type": "integer"}}}, "RecordCreateRequest": {"type": "object", "required": ["properties"], "properties": {"properties": {"type": "object", "additionalProperties": true, "description": "Field name \u2192 value pairs (snake_case)"}, "associations": {"type": "array", "description": "Optional. Link related records at creation time.", "items": {"type": "object", "required": ["id", "kind"], "properties": {"id": {"type": "integer", "description": "Target record ID"}, "kind": {"type": "string", "description": "Target object type", "example": "company"}}}}}}, "RecordUpdateRequest": {"type": "object", "required": ["properties"], "properties": {"properties": {"type": "object", "additionalProperties": true}}}, "FilterRequest": {"type": "object", "properties": {"filter_groups": {"type": "array", "items": {"type": "object", "properties": {"logical_operator": {"type": "string", "enum": ["AND", "OR"]}, "filters": {"type": "array", "items": {"type": "object", "properties": {"field_path": {"type": "string"}, "operator": {"type": "string", "enum": ["EQUALS", "GREATER_THAN", "BETWEEN", "IN", "IS_NULL", "IS_NOT_NULL", "CONTAINS", "STARTS_WITH", "ENDS_WITH", "NOT", "NOT_IN"]}, "value": {}, "values": {"type": "array", "items": {}}}}}}}}, "sort": {"type": "object", "properties": {"field": {"type": "string"}, "direction": {"type": "string", "enum": ["ASC", "DESC"]}}}, "pagination": {"type": "object", "properties": {"page": {"type": "integer", "default": 0}, "page_size": {"type": "integer", "default": 20, "maximum": 100}}}}}, "BatchRequest": {"type": "object", "required": ["operation", "records"], "properties": {"operation": {"type": "string", "enum": ["create", "read", "update", "upsert", "delete"]}, "all_or_none": {"type": "boolean", "default": false}, "id_property": {"type": "string", "description": "Property for upsert key (e.g., email)"}, "records": {"type": "array", "items": {"type": "object"}, "maxItems": 10, "description": "Flat property maps (NOT wrapped in `properties`). For update/delete, include the record id under the field named by `id_property` (default `id`)."}}}, "BatchResponse": {"type": "object", "properties": {"results": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "integer"}, "status": {"type": "string"}, "success": {"type": "boolean"}, "error": {"type": "string"}}}}, "success_count": {"type": "integer"}, "failure_count": {"type": "integer"}}}, "ErrorResponse": {"type": "object", "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "errors": {"type": "array", "items": {"type": "object", "properties": {"code": {"type": "string"}, "field": {"type": "string"}, "message": {"type": "string"}}}}}}, "PaginationMetadata": {"type": "object", "properties": {"page": {"type": "integer"}, "page_size": {"type": "integer"}, "total_elements": {"type": "integer"}, "total_pages": {"type": "integer"}, "has_next": {"type": "boolean"}, "has_previous": {"type": "boolean"}}}, "UserSafe": {"type": "object", "description": "User identity. Sensitive fields (token, password, api_key) are never returned.", "properties": {"id": {"type": "integer"}, "first_name": {"type": "string"}, "last_name": {"type": "string"}, "primary_email": {"type": "string"}, "username": {"type": "string"}, "role": {"type": "string", "enum": ["admin", "sales_manager", "sales_member"]}, "title": {"type": "string"}, "status": {"type": "string", "enum": ["ACTIVATED", "CREATED", "SUSPENDED"]}, "sales_user": {"type": "boolean"}, "created_at": {"type": "string", "format": "date-time"}}}, "Stage": {"type": "object", "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "stage_order": {"type": "integer"}, "stage_category": {"type": "string", "description": "e.g. Early Stage, Mid-Level Stage, Closed Won"}, "win_probability": {"type": "integer"}, "is_closed": {"type": "boolean", "description": "true for terminal stages (Closed Won / Closed Lost)"}, "entry_criteria": {"type": "string"}, "pipeline_id": {"type": "integer"}}}, "Pipeline": {"type": "object", "description": "Pipeline. List responses omit `stages`; Get by ID returns the full stages array.", "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "description": {"type": "string"}, "is_default": {"type": "boolean"}, "deleted": {"type": "boolean"}, "stages": {"type": "array", "items": {"$ref": "#/components/schemas/Stage"}}, "created_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"}, "created_by": {"type": "integer"}}}, "AssociationDefinition": {"type": "object", "properties": {"association_name": {"type": "string", "example": "company_deal_assoc"}, "label": {"type": "string", "example": "Company"}, "source_object": {"type": "string", "example": "deal"}, "target_object": {"type": "string", "example": "company"}, "cardinality": {"type": "string", "enum": ["ONE_TO_ONE", "ONE_TO_MANY", "MANY_TO_MANY"]}, "is_default": {"type": "boolean"}, "is_lookup": {"type": "boolean"}, "is_active": {"type": "boolean"}}}, "ObjectField": {"type": "object", "properties": {"name": {"type": "string"}, "type": {"type": "string", "description": "Field datatype (TEXT, EMAIL, NUMBER, DATE, ...)"}, "label": {"type": "string"}, "description": {"type": "string"}, "required": {"type": "boolean"}, "unique": {"type": "boolean"}, "filterable": {"type": "boolean"}, "searchable": {"type": "boolean"}, "read_only": {"type": "boolean"}, "hidden": {"type": "boolean"}, "kind": {"type": "string"}, "override_policy": {"type": "string"}, "default_value": {}, "options": {}}}, "ObjectTypeDescriptor": {"type": "object", "description": "Effective (system + tenant-override) schema for the type. `version` increments on schema change.", "properties": {"id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "example": "contact"}, "label": {"type": "string"}, "plural_label": {"type": "string"}, "object_kind": {"type": "string", "enum": ["STANDARD", "CUSTOM"]}, "description": {"type": "string"}, "version": {"type": "integer"}, "fields": {"type": "array", "items": {"$ref": "#/components/schemas/ObjectField"}}}}}, "responses": {"RecordPage": {"description": "Paginated record list", "content": {"application/json": {"schema": {"type": "object", "properties": {"results": {"type": "array", "items": {"$ref": "#/components/schemas/ObjectRecord"}}, "metadata": {"$ref": "#/components/schemas/PaginationMetadata"}}}}}}, "BadRequest": {"description": "Validation error, malformed body, or invalid filter", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}, "NotFound": {"description": "Resource not found \u2014 either the record ID does not exist for the given object type, or the Bearer token is invalid/expired (\"No valid organization found\").", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}, "ServerError": {"description": "Server error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}}}}}</script>
 </div>
 
+<script>
+  document.getElementById('api-reference').dataset.configuration = "{\"theme\": \"purple\", \"layout\": \"modern\", \"showSidebar\": true, \"hideDownloadButton\": false, \"hideTestRequestButton\": false, \"darkMode\": false, \"hideClientButton\": false, \"defaultHttpClient\": {\"targetKey\": \"shell\", \"clientKey\": \"curl\"}, \"hiddenClients\": {\"node\": true, \"javascript\": true, \"python\": true, \"ruby\": true, \"php\": true, \"go\": true, \"java\": true, \"kotlin\": true, \"objc\": true, \"swift\": true, \"csharp\": true, \"powershell\": true, \"http\": true, \"c\": true, \"clojure\": true, \"ocaml\": true, \"r\": true}, \"metaData\": {\"title\": \"Dreamteam CRM API Documentation\", \"description\": \"API reference for the Holonet Objects API v2 \\u2014 records, associations, users, pipelines.\"}, \"authentication\": {\"preferredSecurityScheme\": \"bearerAuth\", \"http\": {\"bearer\": {\"token\": \"\"}}}}";
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
 </body>
 </html>
