@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Holonet Objects API",
-    "description": "The Dreamteam CRM API lets you programmatically access and manage your CRM data \u2014 contacts, companies, deals, users, and pipelines. All endpoints follow REST conventions and return JSON.\n\n## Authentication\nAll requests require an OAuth2 bearer token. Your Bearer token identifies your organization \u2014 no tenant header or subdomain needed. Get your token from **Profile \u2192 API Token**.\n\n## Content-Type\nUse `application/json` for POST and PUT. Use `application/merge-patch+json` for PATCH.\n\n## Naming\nRequest and response bodies are **snake_case**. The Filter endpoint additionally accepts camelCase field names (`filterGroups`/`fieldPath`) \u2014 but `fieldPath` *values* are always snake_case attribute names (e.g. `owner_id`).\n\n## Associations\nAssociations live in their own block \u2014 never inside `properties`. Embed up to 100 per type via `?associations=` query parameter. Use the dedicated Associations endpoints to page beyond that. For Create record, pass an optional `associations: [{id, kind}]` array to link related records at creation time.",
-    "version": "2.0.0",
+    "description": "The Dreamteam CRM API lets you programmatically access and manage your CRM data \u2014 contacts, companies, deals, users, and pipelines. All endpoints follow REST conventions and return JSON.\n\n## Authentication\nAll requests require an OAuth2 bearer token. Your Bearer token identifies your organization \u2014 no tenant header or subdomain needed. Get your token from **Profile \u2192 API Token**. Tokens do not expire automatically \u2014 they remain valid until you rotate them from the same page. Rotate immediately if you suspect a security breach.\n\n## Content-Type\n- `application/json` for POST and PUT\n- `application/merge-patch+json` for PATCH\n\n## Naming\nRequest and response bodies are **snake_case**. The Filter endpoint additionally accepts camelCase field names (`filterGroups`/`fieldPath`) \u2014 but `fieldPath` *values* are always snake_case attribute names (e.g. `owner_id`).\n\n## Timestamps\nAll timestamps in API responses are in **UTC** using ISO 8601 format: `YYYY-MM-DDTHH:MM:SS.ffffffZ`. The trailing `Z` indicates UTC. Use the same format when sending date values in requests (e.g. `expected_close_date`).\n\n## Associations\nAssociations live in their own block \u2014 never inside `properties`. Embed up to 100 per type via `?associations=` query parameter. Use the dedicated Associations endpoints to page beyond that. For Create record, pass an optional `associations: [{id, kind}]` array to link related records at creation time.",
+    "version": "2.1.0",
     "contact": {
       "name": "Dreamteam Support",
       "email": "support@dreamteam.co"
@@ -80,6 +80,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       },
@@ -102,25 +105,42 @@
               "schema": {
                 "$ref": "#/components/schemas/RecordCreateRequest"
               },
-              "example": {
-                "properties": {
-                  "name": "Enterprise License - Acme Corp",
-                  "amount": 50000,
-                  "pipeline_id": 1,
-                  "stage_id": 2,
-                  "expected_close_date": "2026-08-31T00:00:00Z",
-                  "owner_id": 789
-                },
-                "associations": [
-                  {
-                    "id": 456,
-                    "kind": "company"
-                  },
-                  {
-                    "id": 123,
-                    "kind": "contact"
+              "examples": {
+                "contact": {
+                  "summary": "Contact",
+                  "value": {
+                    "properties": {
+                      "first_name": "Shivani",
+                      "last_name": "Shankar",
+                      "email": "shivanishankar@acme.com",
+                      "owner_id": 1000052,
+                      "contact_activity_status": "New"
+                    }
                   }
-                ]
+                },
+                "deal-with-associations": {
+                  "summary": "Deal with inline associations",
+                  "value": {
+                    "properties": {
+                      "name": "Enterprise License - Acme Corp",
+                      "amount": 50000,
+                      "pipeline_id": 1,
+                      "stage_id": 2,
+                      "expected_close_date": "2026-08-31T00:00:00Z",
+                      "owner_id": 1000052
+                    },
+                    "associations": [
+                      {
+                        "id": 1007569,
+                        "kind": "company"
+                      },
+                      {
+                        "id": 1015634,
+                        "kind": "contact"
+                      }
+                    ]
+                  }
+                }
               }
             }
           }
@@ -149,6 +169,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -160,7 +183,7 @@
         ],
         "operationId": "getRecord",
         "summary": "Get a record by ID",
-        "description": "Fetch one record. Use `?associations=contact&associations=company` to embed linked records (capped at 100 per type).",
+        "description": "Fetch one record. Use `?associations=contact&associations=company` to embed linked records (capped at 100 per type). Supported association types: `contact`, `company`, `deal`, `note`.\n\nTo fetch a note's content, call this same endpoint with `object=note` \u2014 notes are first-class records at `/api/v2/objects/note/records/{noteId}`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -188,6 +211,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       },
@@ -197,7 +223,7 @@
         ],
         "operationId": "replaceRecord",
         "summary": "Replace a record (full update)",
-        "description": "Full replace. Fields the schema allows but the payload omits are cleared. For partial edits, use PATCH.",
+        "description": "Replaces the record's properties with the provided fields. **All required fields must be included** \u2014 omitted required fields trigger a `VALIDATION_FAILED / REQUIRED_FIELD_MISSING` error. Non-required fields that are omitted are cleared. Use PATCH instead if you only need to update a few fields.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -235,6 +261,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       },
@@ -288,6 +317,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -312,36 +344,89 @@
               "schema": {
                 "$ref": "#/components/schemas/FilterRequest"
               },
-              "example": {
-                "filter_groups": [
-                  {
-                    "logical_operator": "AND",
-                    "filters": [
+              "examples": {
+                "contacts": {
+                  "summary": "Search contacts",
+                  "value": {
+                    "filter_groups": [
                       {
-                        "field_path": "owner_id",
-                        "operator": "EQUALS",
-                        "value": 789
-                      },
+                        "logical_operator": "AND",
+                        "filters": [
+                          {
+                            "field_path": "owner_id",
+                            "operator": "EQUALS",
+                            "value": 789
+                          },
+                          {
+                            "field_path": "city",
+                            "operator": "EQUALS",
+                            "value": "San Francisco"
+                          },
+                          {
+                            "field_path": "last_activity_date",
+                            "operator": "GREATER_THAN",
+                            "value": "2026-04-01T00:00:00Z"
+                          }
+                        ]
+                      }
+                    ],
+                    "pagination": {
+                      "page": 0,
+                      "page_size": 25
+                    },
+                    "sort": {
+                      "field": "last_activity_date",
+                      "direction": "DESC"
+                    }
+                  }
+                },
+                "companies-between": {
+                  "summary": "Companies with BETWEEN",
+                  "value": {
+                    "filter_groups": [
                       {
-                        "field_path": "city",
-                        "operator": "EQUALS",
-                        "value": "San Francisco"
-                      },
+                        "logical_operator": "AND",
+                        "filters": [
+                          {
+                            "field_path": "industry",
+                            "operator": "EQUALS",
+                            "value": "Technology"
+                          },
+                          {
+                            "field_path": "company_size",
+                            "operator": "BETWEEN",
+                            "values": [
+                              100,
+                              1000
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "pagination": {
+                      "page": 0,
+                      "page_size": 25
+                    }
+                  }
+                },
+                "hydrate-by-id": {
+                  "summary": "Hydrate by ID (IN filter)",
+                  "value": {
+                    "filterGroups": [
                       {
-                        "field_path": "last_activity_date",
-                        "operator": "GREATER_THAN",
-                        "value": "2026-04-01T00:00:00Z"
+                        "filters": [
+                          {
+                            "fieldPath": "id",
+                            "operator": "IN",
+                            "values": [
+                              1001094,
+                              1015059
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
-                ],
-                "pagination": {
-                  "page": 0,
-                  "page_size": 25
-                },
-                "sort": {
-                  "field": "last_activity_date",
-                  "direction": "DESC"
                 }
               }
             }
@@ -353,6 +438,132 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v2/objects/{object}/records/batch": {
+      "post": {
+        "tags": [
+          "Records"
+        ],
+        "operationId": "batchRecords",
+        "summary": "Batch operations",
+        "description": "Create or update multiple records in one call. Set `operation` to `create` or `update`. Maximum **100 records** per batch.\n\n**Important:** Batch create passes fields directly in each record object \u2014 there is no `properties` wrapper like single Create uses. Compare: single Create sends `{ \"properties\": { \"first_name\": \"...\" } }`; batch Create sends `{ \"first_name\": \"...\" }` directly.\n\nFor update, include the id field along with fields to change; `id_property` (default `id`) selects the match key.\n\nWith `all_or_none: true`, the entire batch is rolled back on any failure. With `false` (default), valid records are committed and per-record errors are reported in `results`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ObjectType"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              },
+              "examples": {
+                "batch-create": {
+                  "summary": "Batch create (partial success allowed)",
+                  "value": {
+                    "operation": "create",
+                    "all_or_none": false,
+                    "records": [
+                      {
+                        "first_name": "Lakshmi",
+                        "email": "lakshmi@acme.com"
+                      },
+                      {
+                        "first_name": "Parvati",
+                        "email": "parvati@acme.com"
+                      }
+                    ]
+                  }
+                },
+                "batch-update": {
+                  "summary": "Batch update (transactional)",
+                  "value": {
+                    "operation": "update",
+                    "all_or_none": true,
+                    "id_property": "id",
+                    "records": [
+                      {
+                        "id": 1015705,
+                        "job_title": "Senior CSM- EMEA"
+                      },
+                      {
+                        "id": 1015668,
+                        "job_title": "Sales User"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                },
+                "examples": {
+                  "all-success": {
+                    "summary": "All records succeed",
+                    "value": {
+                      "results": [
+                        {
+                          "id": 1015814,
+                          "status": "created",
+                          "success": true
+                        },
+                        {
+                          "id": 1015815,
+                          "status": "created",
+                          "success": true
+                        }
+                      ],
+                      "success_count": 2,
+                      "failure_count": 0
+                    }
+                  },
+                  "partial-failure": {
+                    "summary": "Partial failure (all_or_none: false)",
+                    "value": {
+                      "results": [
+                        {
+                          "id": 1015879,
+                          "status": "created",
+                          "success": true
+                        },
+                        {
+                          "status": "error",
+                          "success": false,
+                          "error": "Field 'email' is required"
+                        }
+                      ],
+                      "success_count": 1,
+                      "failure_count": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
@@ -420,6 +631,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -430,8 +644,8 @@
           "Schema"
         ],
         "operationId": "describeObject",
-        "summary": "Describe an object type",
-        "description": "Returns the effective schema \u2014 field names, types, whether required, filterable, searchable.",
+        "summary": "Schema (Describe Object)",
+        "description": "Returns the full field schema for an object type. **Always call this first** before creating, updating, or filtering records \u2014 it tells you the valid field names, types, and constraints (required, unique, read-only) for each object.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -453,6 +667,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -506,6 +723,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -534,6 +754,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserSafe"
+                },
+                "example": {
+                  "associations": null,
+                  "created_at": "2026-06-12T06:24:58.831219Z",
+                  "first_name": "Preetham",
+                  "id": 1000052,
+                  "last_name": "Manoj",
+                  "primary_email": "preetham@dreamteam.co",
+                  "role": "sales_member",
+                  "sales_user": false,
+                  "status": "CREATED",
+                  "title": "",
+                  "username": "preetham@dreamteam.co"
                 }
               }
             }
@@ -543,6 +776,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
         "description": "Safe-field projection only \u2014 token/password/OTP/lockout/api_key columns are never returned."
@@ -579,6 +815,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
         "parameters": [
@@ -633,6 +872,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -673,9 +915,9 @@
                 },
                 "example": [
                   {
-                    "association_name": "company_deal_assoc",
+                    "association_name": "company_contact_assoc",
                     "label": "Company",
-                    "source_object": "deal",
+                    "source_object": "contact",
                     "target_object": "company",
                     "cardinality": "MANY_TO_MANY",
                     "is_default": false,
@@ -691,6 +933,9 @@
           },
           "500": {
             "$ref": "#/components/responses/ServerError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         }
       }
@@ -712,9 +957,15 @@
         "required": true,
         "schema": {
           "type": "string",
+          "enum": [
+            "contact",
+            "company",
+            "deal",
+            "note"
+          ],
           "example": "contact"
         },
-        "description": "Object type slug (e.g., contact, deal, company, note, meeting)"
+        "description": "Object type slug"
       },
       "RecordId": {
         "name": "id",
@@ -763,7 +1014,7 @@
           "default": 20,
           "maximum": 100
         },
-        "description": "Page size (max 100)"
+        "description": "Page size. Default 20. Max 100 \u2014 higher values are silently capped at 100 (no error)."
       },
       "Associations": {
         "name": "associations",
@@ -882,16 +1133,19 @@
                         "type": "string",
                         "enum": [
                           "EQUALS",
+                          "NOT_EQUALS",
                           "GREATER_THAN",
+                          "LESS_THAN",
+                          "GREATER_THAN_OR_EQUAL_TO",
+                          "LESS_THAN_OR_EQUAL_TO",
                           "BETWEEN",
                           "IN",
+                          "NOT_IN",
                           "IS_NULL",
                           "IS_NOT_NULL",
                           "CONTAINS",
                           "STARTS_WITH",
-                          "ENDS_WITH",
-                          "NOT",
-                          "NOT_IN"
+                          "ENDS_WITH"
                         ]
                       },
                       "value": {},
@@ -947,27 +1201,28 @@
             "type": "string",
             "enum": [
               "create",
-              "read",
-              "update",
-              "upsert",
-              "delete"
-            ]
+              "update"
+            ],
+            "description": "`create` or `update`"
           },
           "all_or_none": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "`true` = if any record fails, the entire batch is rolled back. `false` = partial success allowed."
           },
           "id_property": {
             "type": "string",
-            "description": "Property for upsert key (e.g., email)"
+            "description": "The field used to match records for updates. Currently only `id` is supported. Required for `update` operations.",
+            "example": "id"
           },
           "records": {
             "type": "array",
             "items": {
-              "type": "object"
+              "type": "object",
+              "additionalProperties": true
             },
-            "maxItems": 10,
-            "description": "Flat property maps (NOT wrapped in `properties`). For update/delete, include the record id under the field named by `id_property` (default `id`)."
+            "maxItems": 100,
+            "description": "For `create`, pass field values directly (no `properties` wrapper \u2014 unlike single Create). For `update`, include the ID field along with fields to change."
           }
         }
       },
@@ -983,7 +1238,8 @@
                   "type": "integer"
                 },
                 "status": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "created"
                 },
                 "success": {
                   "type": "boolean"
@@ -1339,6 +1595,21 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized \u2014 the Bearer token is invalid, missing, or has been regenerated.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "message": "Unauthorized access",
+              "path": "/api/v2/objects/contact/records",
+              "timestamp": "2026-07-02T08:26:39.437"
             }
           }
         }
