@@ -3,7 +3,7 @@
   "info": {
     "title": "Holonet Objects API",
     "description": "The Dreamteam CRM API lets you programmatically access and manage your CRM data \u2014 contacts, companies, deals, users, and pipelines. All endpoints follow REST conventions and return JSON.\n\n## Authentication\nAll requests require an OAuth2 bearer token. Your Bearer token identifies your organization \u2014 no tenant header or subdomain needed. Tokens do not expire automatically \u2014 they remain valid until you rotate them.\n\n### Getting your API token\n1. Click your **profile icon** (top-right corner)\n2. Click **View Profile**\n3. Scroll to the **API Token** section at the bottom\n\nThe panel shows three actions on the right of the masked token field:\n\n- \ud83d\udc41 **Reveal Token** \u2014 show the token in plaintext (default is masked with dots)\n- \ud83d\udccb **Copy Token** \u2014 copy the token to your clipboard\n- \ud83d\udd04 **Reset Token** \u2014 rotate the token. The previous token is invalidated immediately, so any integrations using it will start returning `401 Unauthorized` until you update them with the new token.\n\n![API Token panel with Reveal, Copy, and Reset icons](images/api-token.png)\n\nRotate your token immediately if you suspect a security breach.\n\n## Content-Type\n- `application/json` for POST and PUT\n- `application/merge-patch+json` for PATCH\n\n## Naming\nRequest and response bodies are **snake_case**. The Filter endpoint additionally accepts camelCase field names (`filterGroups`/`fieldPath`) \u2014 but `fieldPath` *values* are always snake_case attribute names (e.g. `owner_id`).\n\n## Timestamps\nAll timestamps in API responses are in **UTC** using ISO 8601 format: `YYYY-MM-DDTHH:MM:SS.ffffffZ`. The trailing `Z` indicates UTC. Use the same format when sending date values in requests (e.g. `expected_close_date`).\n\n## Associations\nAssociations live in their own block \u2014 never inside `properties`. Embed up to 100 per type via `?associations=` query parameter. Use the dedicated Associations endpoints to page beyond that. For Create record, pass an optional `associations: [{id, kind}]` array to link related records at creation time.",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "contact": {
       "name": "Dreamteam Support",
       "email": "support@dreamteam.co"
@@ -92,7 +92,7 @@
         ],
         "operationId": "createRecord",
         "summary": "Create a record",
-        "description": "Creates one record. Schema validation, dedup checks, and lifecycle hooks run in the write transaction.",
+        "description": "Creates one record. Fields go inside `properties`. Associations are optional \u2014 pass an array of `{id, kind}` to link related records at creation time. Use the Schema endpoint under Getting Started to see valid fields for each object type.\n\n**Note on naming.** When creating associations, use `kind` with the simple object type name (e.g. `\"kind\": \"company\"`). In GET responses, embedded associations return `type` with the full association name (e.g. `\"type\": \"company_deal_assoc\"`). These refer to the same link \u2014 the keys and values are just named differently in requests vs responses.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -302,7 +302,7 @@
         ],
         "operationId": "replaceRecord",
         "summary": "Replace a record (full update)",
-        "description": "Replaces the record's properties with the provided fields. **All required fields must be included** \u2014 omitted required fields trigger a `VALIDATION_FAILED / REQUIRED_FIELD_MISSING` error. Non-required fields that are omitted are cleared. Use PATCH instead if you only need to update a few fields.",
+        "description": "Replaces the record's properties with the provided fields. **All required fields must be included** \u2014 omitted required fields trigger a `VALIDATION_FAILED / REQUIRED_FIELD_MISSING` error. Non-required fields that are omitted are set to `null` (see the sample response \u2014 `owner_id` was omitted from the request and appears as `null` in the response). Use PATCH instead if you only need to update a few fields.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -317,17 +317,37 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecordUpdateRequest"
+              },
+              "example": {
+                "properties": {
+                  "first_name": "Ram",
+                  "email": "ram@acme.com",
+                  "contact_activity_status": "New"
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Record replaced",
+            "description": "Record replaced. Note that fields omitted from the request are cleared \u2014 see the example.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectRecord"
+                },
+                "example": {
+                  "id": 1015879,
+                  "type": "contact",
+                  "properties": {
+                    "owner_id": null,
+                    "contact_activity_status": "New",
+                    "first_name": "Ram",
+                    "email": "ram@acme.com"
+                  },
+                  "created_at": "2026-07-02T03:39:28.977039Z",
+                  "updated_at": "2026-07-02T08:51:04.855220Z",
+                  "created_by": 1000023
                 }
               }
             }
@@ -551,7 +571,7 @@
         ],
         "operationId": "batchRecords",
         "summary": "Batch operations",
-        "description": "Create or update multiple records in one call. Set `operation` to `create` or `update`. Maximum **100 records** per batch.\n\n**Important:** Batch create passes fields directly in each record object \u2014 there is no `properties` wrapper like single Create uses. Compare: single Create sends `{ \"properties\": { \"first_name\": \"...\" } }`; batch Create sends `{ \"first_name\": \"...\" }` directly.\n\nFor update, include the id field along with fields to change; `id_property` (default `id`) selects the match key.\n\nWith `all_or_none: true`, the entire batch is rolled back on any failure. With `false` (default), valid records are committed and per-record errors are reported in `results`.",
+        "description": "Create or update multiple records in one call. Set `operation` to `create` or `update`. Maximum **100 records** per batch.\n\n**Important:** Batch create passes fields directly in each record object \u2014 there is no `properties` wrapper like single Create uses. Compare: single Create sends `{ \"properties\": { \"first_name\": \"...\" } }`; batch Create sends `{ \"first_name\": \"...\" }` directly.\n\nFor update, include the id field along with fields to change; `id_property` (default `id`) selects the match key.\n\nPartial success is the only mode. Valid records are committed; per-record errors appear in `results` and are counted in `failure_count`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ObjectType"
@@ -566,10 +586,9 @@
               },
               "examples": {
                 "batch-create": {
-                  "summary": "Batch create (partial success allowed)",
+                  "summary": "Batch create",
                   "value": {
                     "operation": "create",
-                    "all_or_none": false,
                     "records": [
                       {
                         "first_name": "Lakshmi",
@@ -583,10 +602,9 @@
                   }
                 },
                 "batch-update": {
-                  "summary": "Batch update (transactional)",
+                  "summary": "Batch update",
                   "value": {
                     "operation": "update",
-                    "all_or_none": true,
                     "id_property": "id",
                     "records": [
                       {
@@ -1458,11 +1476,6 @@
             ],
             "description": "`create` or `update`"
           },
-          "all_or_none": {
-            "type": "boolean",
-            "default": false,
-            "description": "`true` = if any record fails, the entire batch is rolled back. `false` = partial success allowed."
-          },
           "id_property": {
             "type": "string",
             "description": "The field used to match records for updates. Currently only `id` is supported. Required for `update` operations.",
@@ -1477,7 +1490,8 @@
             "maxItems": 100,
             "description": "For `create`, pass field values directly (no `properties` wrapper \u2014 unlike single Create). For `update`, include the ID field along with fields to change."
           }
-        }
+        },
+        "description": "Create or update multiple records in a single request. Partial success is the only mode \u2014 valid records are committed and per-record failures are reported in `results`."
       },
       "BatchResponse": {
         "type": "object",
